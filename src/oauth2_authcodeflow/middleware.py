@@ -91,7 +91,7 @@ class Oauth2MiddlewareMixin(MiddlewareMixin):
                 if BlacklistedToken.is_blacklisted(id_token):
                     raise MiddlewareException(f"token {id_token} is blacklisted")
             self.check_function(request)
-            return self.get_response(request)
+            return
         except MiddlewareException as e:
             next_url = request.build_absolute_uri()
             failure_url = request.session.get(constants.SESSION_FAIL_URL, '/')
@@ -212,4 +212,4 @@ class BearerAuthMiddleware(Oauth2MiddlewareMixin):
                 if not request.session.session_key:
                     # ensure request.session.session_key exists
                     request.session.save()
-        return self.get_response(request)
+        return
