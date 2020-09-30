@@ -43,12 +43,16 @@ DEFAULTS = {
     'OIDC_OP_AUTHORIZATION_URL': None,
     # URL of your OpenID connect Provider token endpoint (not recommended, `OIDC_OP_DISCOVERY_DOCUMENT_URL` is preferred).
     'OIDC_OP_TOKEN_URL': None,
+    # URL of your OpenID connect Provider userinfo endpoint (not recommended, `OIDC_OP_DISCOVERY_DOCUMENT_URL` is preferred).
+    'OIDC_OP_USERINFO_URL': None,
     # URL of your OpenId connect Provider endpoint to get public signing keys (in `PEM` or `DER` format).
     # This is used to verify the `id_token`.
     # This is not recommended to provide this url here but rather use `OIDC_OP_DISCOVERY_DOCUMENT_URL` config.
     'OIDC_OP_JWKS_URL': None,
     # URL of your OpenID connect Provider end session endpoint (not recommended, `OIDC_OP_DISCOVERY_DOCUMENT_URL` is preferred).
     'OIDC_OP_END_SESSION_URL': None,
+    # Fetch user info on login or not.
+    'OIDC_OP_FETCH_USER_INFO': True,
     # Do a call to total logout will call the OP for a logout. Default true.
     # Be careful, some OP will not follow the RFC and will not allow the user to NOT logout all connected apps.
     # Azure is such a bad example.
@@ -61,6 +65,8 @@ DEFAULTS = {
     'OIDC_RP_CLIENT_SECRET': ImproperlyConfigured,
     # `PKCE` improve security, disable it only if your provider cannot handle it.
     'OIDC_RP_USE_PKCE': True,
+    # Force to ask for consent on login, even if `offline_access` is not in scopes
+    'OIDC_RP_FORCE_CONSENT': False,
     # The OpenID Connect scopes to request during login.
     # The scopes could be usefull later to get access to other ressources.
     # `openid` must be in the list.

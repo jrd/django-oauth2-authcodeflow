@@ -1,6 +1,7 @@
 for key in [
     'oidc_op_authorization_url',
     'oidc_op_token_url',
+    'oidc_op_userinfo_url',
     'oidc_op_jwks_url',
     'oidc_op_jwks',
     'oidc_op_end_session_url',

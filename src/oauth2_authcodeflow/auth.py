@@ -11,14 +11,15 @@ from django.contrib.auth.models import AbstractBaseUser
 from django.core.exceptions import SuspiciousOperation
 from django.urls import reverse
 from jose import jwt
+from requests import get as request_get
 from requests import post as request_post
 
 from .conf import (
     constants,
     settings,
 )
-from .utils import OIDCUrlsMixin
 from .models import BlacklistedToken
+from .utils import OIDCUrlsMixin
 
 
 class AuthenticationMixin:
@@ -69,8 +70,8 @@ class AuthenticationMixin:
             if expected not in claims:
                 raise SuspiciousOperation(f"'{expected}' claim was expected")
 
-    def get_or_create_user(self, id_claims: Dict, access_token: str) -> AbstractBaseUser:
-        claims = self.get_full_claims(id_claims, access_token)
+    def get_or_create_user(self, request, id_claims: Dict, access_token: str) -> AbstractBaseUser:
+        claims = self.get_full_claims(request, id_claims, access_token)
         username = settings.OIDC_DJANGO_USERNAME_FUNC(claims)
         user, _ = self.UserModel.objects.get_or_create(username=username)
         self.update_user(user, claims)
@@ -78,15 +79,26 @@ class AuthenticationMixin:
         user.save()
         return user
 
-    def get_full_claims(self, id_claims: Dict, access_token: str) -> Dict:
+    def get_full_claims(self, request, id_claims: Dict, access_token: str) -> Dict:
         """access_token is not used here, id_claims is enough"""
-        return id_claims
+        if settings.OIDC_OP_FETCH_USER_INFO and constants.SESSION_OP_USERINFO_URL in request.session and access_token:
+            claims = id_claims.copy()
+            claims.update(request_get(request.session[constants.SESSION_OP_USERINFO_URL], params={'access_token': access_token}).json())
+            return claims
+        else:
+            return id_claims
 
     def update_user(self, user: AbstractBaseUser, claims: Dict) -> None:
         """udate the django user with data from the claims"""
         user.email = claims.get(settings.OIDC_EMAIL_CLAIM)
-        user.first_name = claims.get(settings.OIDC_FIRSTNAME_CLAIM)
-        user.last_name = claims.get(settings.OIDC_LASTNAME_CLAIM)
+        if callable(settings.OIDC_FIRSTNAME_CLAIM):
+            user.first_name = settings.OIDC_FIRSTNAME_CLAIM(claims)
+        else:
+            user.first_name = claims.get(settings.OIDC_FIRSTNAME_CLAIM)
+        if callable(settings.OIDC_LASTNAME_CLAIM):
+            user.last_name = settings.OIDC_LASTNAME_CLAIM(claims)
+        else:
+            user.last_name = claims.get(settings.OIDC_LASTNAME_CLAIM)
         user.is_active = True
 
 
@@ -132,18 +144,22 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             result = resp.json()
             id_token = result['id_token']
             access_token = result['access_token']
-            expires_in = result['expires_in']  # in secs
+            expires_in = result.get('expires_in')  # in secs, could be missing
             refresh_token = result.get('refresh_token') if 'offline_access' in settings.OIDC_RP_SCOPES else None
             id_claims = self.validate_and_decode_id_token(id_token, nonce, request.session[constants.SESSION_OP_JWKS])
             self.validate_claims(id_claims)
             now = time()
+            if expires_in:
+                expires_at = now + expires_in
+            else:
+                expires_at = id_claims.get('exp', now + settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS)
             request.session[constants.SESSION_ID_TOKEN] = id_token
             request.session[constants.SESSION_ACCESS_TOKEN] = access_token
-            request.session[constants.SESSION_ACCESS_EXPIRES_AT] = now + expires_in
+            request.session[constants.SESSION_ACCESS_EXPIRES_AT] = expires_at
             request.session[constants.SESSION_EXPIRES_AT] = now + settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS
             if refresh_token:
                 request.session[constants.SESSION_REFRESH_TOKEN] = refresh_token
-            user = self.get_or_create_user(id_claims, access_token)
+            user = self.get_or_create_user(request, id_claims, access_token)
             return user
         except Exception as e:
             warning(e, str(e))
@@ -173,7 +189,7 @@ class BearerAuthenticationBackend(ModelBackend, AuthenticationMixin, OIDCUrlsMix
             if BlacklistedToken.is_blacklisted(id_token):
                 raise SuspiciousOperation(f"token {id_token} is blacklisted")
             id_claims = self.validate_and_decode_id_token(id_token, nonce=None, jwks=self.oidc_urls.get(constants.SESSION_OP_JWKS, []))
-            user = self.get_or_create_user(id_claims, None)
+            user = self.get_or_create_user(request, id_claims, None)
             return user
         except Exception as e:
             warning(e.args[0])
