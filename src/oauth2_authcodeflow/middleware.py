@@ -93,7 +93,7 @@ class Oauth2MiddlewareMixin(MiddlewareMixin):
             self.check_function(request)
             return
         except MiddlewareException as e:
-            next_url = request.build_absolute_uri()
+            next_url = request.build_absolute_uri() if request.method == 'GET' else request.session.get(constants.SESSION_NEXT_URL, '/')
             failure_url = request.session.get(constants.SESSION_FAIL_URL, '/')
             # Clear session values
             for conf in dir(constants):

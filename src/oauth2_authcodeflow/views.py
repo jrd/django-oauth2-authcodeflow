@@ -80,7 +80,7 @@ class AuthenticateView(CacheBaseView):
             'scope': ' '.join(scopes),
             'redirect_uri': request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
         }
-        if 'offline_access' in scopes or settings.OIDC_RP_FORCE_CONSENT:
+        if 'offline_access' in scopes or settings.OIDC_RP_FORCE_CONSENT_PROMPT:
             auth_params['prompt'] = 'consent'
         if use_pkce:
             code_verifier = get_random_string(length=100, allowed_chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~')

@@ -37,6 +37,7 @@ DEFAULTS = {
     # If you provide this, the following configs will be ignored:
     # - `OIDC_OP_AUTHORIZATION_URL`
     # - `OIDC_OP_TOKEN_URL`
+    # - `OIDC_OP_USERINFO_URL`
     # - `OIDC_OP_JWKS_URL`
     'OIDC_OP_DISCOVERY_DOCUMENT_URL': None,
     # URL of your OpenID connect Provider authorization endpoint (not recommended, `OIDC_OP_DISCOVERY_DOCUMENT_URL` is preferred).
@@ -66,7 +67,7 @@ DEFAULTS = {
     # `PKCE` improve security, disable it only if your provider cannot handle it.
     'OIDC_RP_USE_PKCE': True,
     # Force to ask for consent on login, even if `offline_access` is not in scopes
-    'OIDC_RP_FORCE_CONSENT': False,
+    'OIDC_RP_FORCE_CONSENT_PROMPT': False,
     # The OpenID Connect scopes to request during login.
     # The scopes could be usefull later to get access to other ressources.
     # `openid` must be in the list.
@@ -103,7 +104,9 @@ DEFAULTS = {
     # The default is to use a base64 encode of the email hash (sha1).
     'OIDC_DJANGO_USERNAME_FUNC': get_default_django_username,
     'OIDC_EMAIL_CLAIM': 'email',
+    # You can also provide a lambda that takes all the claims as argument and return a firstname
     'OIDC_FIRSTNAME_CLAIM': 'given_name',
+    # You can also provide a lambda that takes all the claims as argument and return a lastname
     'OIDC_LASTNAME_CLAIM': 'family_name',
     'OIDC_BLACKLIST_TOKEN_TIMEOUT_SECONDS': 7 * 86400,  # 7 days
     # Only used when using authorization in header:
