@@ -48,7 +48,6 @@ def parse_pip_file(pipfile):
 
 
 requirements = parse_pip_file('Pipfile')
-print(requirements)
 
 
 setup(
