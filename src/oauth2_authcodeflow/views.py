@@ -152,7 +152,7 @@ class CallbackView(CacheBaseView):
         failure_url = request.session.get(constants.SESSION_FAIL_URL)
         use_pkce = not from_cli and settings.OIDC_RP_USE_PKCE
         if not next_url or not failure_url:
-            return HttpResponseBadRequest("f{constants.SESSION_NEXT_URL} and {constants.SESSION_FAIL_URL} session parameters should be filled".encode('utf8'))
+            return HttpResponseBadRequest(f"{constants.SESSION_NEXT_URL} and {constants.SESSION_FAIL_URL} session parameters should be filled".encode('utf8'))
         if request.GET.get('error'):
             warning(request.GET['error'])
             # Make sure the user doesn't get to continue to be logged in in Django

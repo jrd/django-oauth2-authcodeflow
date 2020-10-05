@@ -39,7 +39,7 @@ Setup
 Minimal configuration
 ---------------------
 
-- `SESSION_COOKIE_SECURE` to `True`
+- `SESSION_COOKIE_SECURE` to `True` if your Django is served through *HTTPS*
 - `OIDC_OP_DISCOVERY_DOCUMENT_URL` to the well-known openid configuration url of the OP
 - `OIDC_RP_CLIENT_ID` client id provided by the OP
 - `OIDC_RP_CLIENT_SECRET` secrect id provided by the OP
@@ -98,7 +98,7 @@ Secure session cookie settings:
 - `SESSION_COOKIE_HTTPONLY` **must** be `True` (default `True`)
 - `SESSION_COOKIE_PATH` be sure to use `/` to prevent some weird behavior (default `/`)
 - `SESSION_COOKIE_SAMESITE` **should** be `Lax` (default `Lax`)
-- `SESSION_COOKIE_SECURE` **must** be `True` (default `False`)
+- `SESSION_COOKIE_SECURE` **should** be `True` in *https* context (default `False`)
 
 Specific OIDC settings:
 
