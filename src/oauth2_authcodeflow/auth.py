@@ -66,15 +66,15 @@ class AuthenticationMixin:
         return claims
 
     def validate_claims(self, claims):
-        for expected in ['email'] + list(settings.OIDC_OP_EXPECTED_CLAIMS):
+        for expected in ['emails'] + list(settings.OIDC_OP_EXPECTED_CLAIMS):
             if expected not in claims:
                 raise SuspiciousOperation(f"'{expected}' claim was expected")
 
     def get_or_create_user(self, request, id_claims: Dict, access_token: str) -> AbstractBaseUser:
-        claims = self.get_full_claims(request, id_claims, access_token)
-        username = settings.OIDC_DJANGO_USERNAME_FUNC(claims)
+        #claims = self.get_full_claims(request, id_claims, access_token)
+        username = settings.OIDC_DJANGO_USERNAME_FUNC(id_claims)
         user, _ = self.UserModel.objects.get_or_create(username=username)
-        self.update_user(user, claims)
+        self.update_user(user, id_claims)
         user.set_unusable_password()
         user.save()
         return user
@@ -90,7 +90,7 @@ class AuthenticationMixin:
 
     def update_user(self, user: AbstractBaseUser, claims: Dict) -> None:
         """udate the django user with data from the claims"""
-        user.email = claims.get(settings.OIDC_EMAIL_CLAIM)
+        user.email = claims.get(settings.OIDC_EMAIL_CLAIM) if isinstance(settings.OIDC_EMAIL_CLAIM,str) else settings.OIDC_EMAIL_CLAIM(claims)
         if callable(settings.OIDC_FIRSTNAME_CLAIM):
             user.first_name = settings.OIDC_FIRSTNAME_CLAIM(claims)
         else:
@@ -134,7 +134,7 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
                 'client_id': settings.OIDC_RP_CLIENT_ID,
                 'client_secret': settings.OIDC_RP_CLIENT_SECRET,
                 'redirect_uri': request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
-                'code': code,
+                'code': code
             }
             if use_pkce:
                 params['code_verifier'] = code_verifier
