@@ -31,7 +31,7 @@ changes.
 
 | Setting | Value |
 | ------- | ----- |
-| `OIDC_OP_DISCOVERY_DOCUMENT_URL` | `'https://login.microsoftonline.com/<tenant_id>/v2.0/.well-known/openid-configuration'` |
+| `OIDC_OP_DISCOVERY_DOCUMENT_URL` | `'https://<azure_b2c_endpoint>/v2.0/.well-known/openid-configuration'` |
 | `OIDC_DJANGO_USERNAME_FUNC` | `'myapp.utils.get_azure_django_username'` |
 | `OIDC_FIRSTNAME_CLAIM` | `lambda x: x['given_name']`|
 | `OIDC_LASTNAME_CLAIM` | `lambda x: x['family_name']`|
