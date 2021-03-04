@@ -39,7 +39,10 @@ class OIDCUrlsMixin:
                 session_conf = getattr(constants, 'SESSION_' + conf)
                 if session_conf not in session:
                     session[session_conf] = getattr(settings, 'OIDC_' + conf)
-        for conf in ('OP_AUTHORIZATION_URL', 'OP_TOKEN_URL'):#, 'OP_USERINFO_URL'
+        confs = ['OP_AUTHORIZATION_URL', 'OP_TOKEN_URL']
+        if not settings.OIDC_IGNORE_USERINFO_URL:
+            confs.append('OP_USERINFO_URL')
+        for conf in confs:
             session_conf = getattr(constants, 'SESSION_' + conf)
             if not session.get(session_conf):
                 raise ImproperlyConfigured(f'OIDC_{conf} is undefined')

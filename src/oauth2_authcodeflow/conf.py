@@ -17,7 +17,8 @@ def import_string_if_not_func(value: Union[str, Callable], attr: str) -> Callabl
     try:
         return value if callable(value) else import_string(value)
     except ImportError as e:
-        raise ImportError(f"Could not import '{value}' for API setting '{attr}'. {e.__class__.__name__}: {e}.")
+        raise ImportError(
+            f"Could not import '{value}' for API setting '{attr}'. {e.__class__.__name__}: {e}.")
 
 
 def get_default_django_username(claims: Dict) -> str:
@@ -104,6 +105,7 @@ DEFAULTS = {
     # The default is to use a base64 encode of the email hash (sha1).
     'OIDC_DJANGO_USERNAME_FUNC': get_default_django_username,
     'OIDC_EMAIL_CLAIM': 'email',
+    'OIDC_EMAIL_CLAIM_KEY': 'email',
     # You can also provide a lambda that takes all the claims as argument and return a firstname
     'OIDC_FIRSTNAME_CLAIM': 'given_name',
     # You can also provide a lambda that takes all the claims as argument and return a lastname
@@ -120,6 +122,7 @@ DEFAULTS = {
     # Expected list of regexp URL patterns.
     'OIDC_MIDDLEWARE_API_URL_PATTERNS': ['^/api/'],
     'OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS': 7 * 86400,  # 7 days
+    'OIDC_IGNORE_USERINFO_URL': False
 }
 # settings that may be in dotted string import notation and should be transformed in a lazy way.
 IMPORT_STRINGS = [
@@ -137,6 +140,7 @@ class Settings:
     A settings object, that allows settings to be accessed as properties.
     Any setting with dotted string import paths will be resolved to the callable.
     """
+
     def __init__(self, defaults=None, import_strings=None):
         self.defaults = defaults or DEFAULTS
         self.import_strings = import_strings or IMPORT_STRINGS
