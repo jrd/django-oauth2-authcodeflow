@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 # Next
 ## Fixed
 - register json web keys to session only if not already registered
+- fix error handling by adding required method parameter
 
 # 0.2.1
 ## Fixed
