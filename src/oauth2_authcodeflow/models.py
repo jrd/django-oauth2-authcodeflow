@@ -16,7 +16,11 @@ from .conf import settings
 
 class BlacklistedToken(models.Model):
     username = models.CharField(max_length=255, editable=False, db_index=True)
-    token = models.TextField(editable=False)
+    # no max length in RFC6749 but:
+    # - https://docs.microsoft.com/en-us/linkedin/shared/authentication/programmatic-refresh-tokens
+    # - https://stackoverflow.com/questions/24892496/max-size-for-oauth-token
+    # postgres, sqlite, mysql >= 5.0.3 or oracle >= 12c required
+    token = models.CharField(max_length=15000, editable=False)
     expires_at = models.DateTimeField(db_index=True)
     blacklisted_at = models.DateTimeField(editable=False, db_index=True)
 
