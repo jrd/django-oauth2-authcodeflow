@@ -58,7 +58,9 @@ DEFAULTS = {
     # Be careful, some OP will not follow the RFC and will not allow the user to NOT logout all connected apps.
     # Azure is such a bad example.
     'OIDC_OP_TOTAL_LOGOUT': True,
-    # `email` is automatically included in this list.
+    # expected email key.
+    'OIDC_OP_EXPECTED_EMAIL_CLAIM': 'email',
+    # `OIDC_OP_EXPECTED_EMAIL_CLAIM` value is automatically included in this list.
     'OIDC_OP_EXPECTED_CLAIMS': [],
     # OpenID Connect client ID provided for your Relaying Party/client by your OpenIdConnect Provider
     'OIDC_RP_CLIENT_ID': ImproperlyConfigured,
@@ -103,7 +105,9 @@ DEFAULTS = {
     # The username should be unique for this app.
     # The default is to use a base64 encode of the email hash (sha1).
     'OIDC_DJANGO_USERNAME_FUNC': get_default_django_username,
-    'OIDC_EMAIL_CLAIM': 'email',
+    # Default, by value None, is the value of `OIDC_OP_EXPECTED_EMAIL_CLAIM`
+    # You can also provide a lambda that takes all the claims as argument and return an email
+    'OIDC_EMAIL_CLAIM': None,
     # You can also provide a lambda that takes all the claims as argument and return a firstname
     'OIDC_FIRSTNAME_CLAIM': 'given_name',
     # You can also provide a lambda that takes all the claims as argument and return a lastname

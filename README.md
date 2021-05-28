@@ -112,7 +112,8 @@ Specific OIDC settings:
 | `OIDC_OP_END_SESSION_URL` | URL of your OpenID connect Provider end session endpoint (not recommended, `OIDC_OP_DISCOVERY_DOCUMENT_URL` is preferred). | `None` |
 | `OIDC_OP_FETCH_USER_INFO` | Fetch user info on login or not. | `True` |
 | `OIDC_OP_TOTAL_LOGOUT` | Do a call to total logout will call the OP for a logout. Default true.<br>Be careful, some OP will not follow the RFC and will not allow the user to NOT logout all connected apps.<br>Azure is such a bad example. | `True` |
-| `OIDC_OP_EXPECTED_CLAIMS` | `email` is automatically included in this list. | `[]` |
+| `OIDC_OP_EXPECTED_EMAIL_CLAIM` | expected email key. | `'email'` |
+| `OIDC_OP_EXPECTED_CLAIMS` | `OIDC_OP_EXPECTED_EMAIL_CLAIM` value is automatically included in this list. | `[]` |
 | `OIDC_RP_CLIENT_ID` | OpenID Connect client ID provided for your Relaying Party/client by your OpenIdConnect Provider | |
 | `OIDC_RP_CLIENT_SECRET` | OpenID Connect client secret provided for your Relaying Party/client by your OpenIdConnect Provider | |
 | `OIDC_RP_USE_PKCE` | `PKCE` improve security, disable it only if your provider cannot handle it. | `True` |
@@ -127,7 +128,7 @@ Specific OIDC settings:
 | `OIDC_REDIRECT_OK_FIELD_NAME` | Sets the GET parameter that is being used to define the redirect URL after succesful authentication | `'next'` |
 | `OIDC_REDIRECT_ERROR_FIELD_NAME` | Sets the GET parameter that is being used to define the redirect URL after failed authentication | `'fail'` |
 | `OIDC_DJANGO_USERNAME_FUNC` | Function or dotted path to a function that compute the django username based on claims.<br>The username should be unique for this app.<br>The default is to use a base64 url encode of the email hash (sha1). | `get_default_django_username` |
-| `OIDC_EMAIL_CLAIM` | Claim name for email | `'email'` |
+| `OIDC_EMAIL_CLAIM` | Claim name for email<br>`None` value means use `OIDC_OP_EXPECTED_EMAIL_CLAIM` value<br>You can also provide a lambda that takes all the claims as argument and return an email | `None` |
 | `OIDC_FIRSTNAME_CLAIM` | You can also provide a lambda that takes all the claims as argument and return a firstname | `'given_name'` |
 | `OIDC_LASTNAME_CLAIM` | You can also provide a lambda that takes all the claims as argument and return a lastname | `'family_name'` |
 | `OIDC_BLACKLIST_TOKEN_TIMEOUT_SECONDS` | 7 days by default | `7 * 86400` |
