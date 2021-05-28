@@ -85,7 +85,7 @@ class AuthenticationMixin:
             claims = id_claims.copy()
             claims.update(request_get(
                 request.session[constants.SESSION_OP_USERINFO_URL],
-                params={'access_token': access_token},
+                headers={'Authorization': f'{settings.OIDC_AUTHORIZATION_HEADER_PREFIX} {access_token}'},
             ).json())
             return claims
         else:
