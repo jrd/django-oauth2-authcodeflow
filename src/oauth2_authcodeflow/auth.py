@@ -66,7 +66,7 @@ class AuthenticationMixin:
         return claims
 
     def validate_claims(self, claims):
-        for expected in ['email'] + list(settings.OIDC_OP_EXPECTED_CLAIMS):
+        for expected in [settings.OIDC_OP_EXPECTED_EMAIL_CLAIM] + list(settings.OIDC_OP_EXPECTED_CLAIMS):
             if expected not in claims:
                 raise SuspiciousOperation(f"'{expected}' claim was expected")
 
@@ -83,14 +83,22 @@ class AuthenticationMixin:
         """access_token is not used here, id_claims is enough"""
         if settings.OIDC_OP_FETCH_USER_INFO and constants.SESSION_OP_USERINFO_URL in request.session and access_token:
             claims = id_claims.copy()
-            claims.update(request_get(request.session[constants.SESSION_OP_USERINFO_URL], params={'access_token': access_token}).json())
+            claims.update(request_get(
+                request.session[constants.SESSION_OP_USERINFO_URL],
+                params={'access_token': access_token},
+            ).json())
             return claims
         else:
             return id_claims
 
     def update_user(self, user: AbstractBaseUser, claims: Dict) -> None:
         """udate the django user with data from the claims"""
-        user.email = claims.get(settings.OIDC_EMAIL_CLAIM)
+        if settings.OIDC_EMAIL_CLAIM is None:
+            user.email = settings.OIDC_OP_EXPECTED_EMAIL_CLAIM
+        elif callable(settings.OIDC_EMAIL_CLAIM):
+            user.email = settings.OIDC_EMAIL_CLAIM(claims)
+        else:
+            user.email = claims.get(settings.OIDC_EMAIL_CLAIM)
         if callable(settings.OIDC_FIRSTNAME_CLAIM):
             user.first_name = settings.OIDC_FIRSTNAME_CLAIM(claims)
         else:

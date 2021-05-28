@@ -22,6 +22,23 @@ def get_azure_django_username(claims):
 
 `oid` is a special Azure Object ID that uniquely identify the user.
 
+Azure B2C
+---------
+
+Azure B2C does not offer a termination point for user.
+
+The configuration is similar to that of Azure AD but requires some small changes.
+
+
+| Setting | Value |
+| ------- | ----- |
+| `OIDC_OP_DISCOVERY_DOCUMENT_URL` | `'https://<azure_b2c_endpoint>/v2.0/.well-known/openid-configuration'` |
+| `OIDC_OP_FETCH_USER_INFO` | `False` |
+| `OIDC_OP_EXPECTED_EMAIL_CLAIM` | `'emails'` |
+| `OIDC_DJANGO_USERNAME_FUNC` | `'myapp.utils.get_azure_django_username'` |
+
+With the same definition of `myappr.utils.get_azure_django_username` as above.
+
 Gitlab
 ------
 
