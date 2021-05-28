@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 # Next
 ## Changed
 - Use `Authorization` header for `USERINFO` instead of request param
+- `token` field in `BlacklistedToken` table changed from `TextField` to `CharField(max_length=15000)` for MySql compatibility
 ## Fixed
 - register json web keys to session only if not already registered
 - fix error handling by adding required method parameter

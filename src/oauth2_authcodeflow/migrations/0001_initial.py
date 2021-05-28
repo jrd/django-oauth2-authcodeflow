@@ -21,8 +21,9 @@ class Migration(migrations.Migration):
                 ('blacklisted_at', models.DateTimeField(db_index=True, editable=False)),
             ],
         ),
-        migrations.AddConstraint(
-            model_name='blacklistedtoken',
-            constraint=models.UniqueConstraint(fields=('username', 'token'), name='unique_username_token'),
-        ),
+        # will only be applied if possible
+        # migrations.AddConstraint(
+        #     model_name='blacklistedtoken',
+        #     constraint=models.UniqueConstraint(fields=('username', 'token'), name='unique_username_token'),
+        # ),
     ]
