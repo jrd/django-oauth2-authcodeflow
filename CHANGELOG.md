@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Fixed
 - register json web keys to session only if not already registered
 - fix error handling by adding required method parameter
+- `email`, `first_name` and `last_name` cannot be None. Fallback to empty string.
 
 # 0.2.1
 ## Fixed

@@ -98,15 +98,15 @@ class AuthenticationMixin:
         elif callable(settings.OIDC_EMAIL_CLAIM):
             user.email = settings.OIDC_EMAIL_CLAIM(claims)
         else:
-            user.email = claims.get(settings.OIDC_EMAIL_CLAIM)
+            user.email = claims.get(settings.OIDC_EMAIL_CLAIM, '')
         if callable(settings.OIDC_FIRSTNAME_CLAIM):
             user.first_name = settings.OIDC_FIRSTNAME_CLAIM(claims)
         else:
-            user.first_name = claims.get(settings.OIDC_FIRSTNAME_CLAIM)
+            user.first_name = claims.get(settings.OIDC_FIRSTNAME_CLAIM, '')
         if callable(settings.OIDC_LASTNAME_CLAIM):
             user.last_name = settings.OIDC_LASTNAME_CLAIM(claims)
         else:
-            user.last_name = claims.get(settings.OIDC_LASTNAME_CLAIM)
+            user.last_name = claims.get(settings.OIDC_LASTNAME_CLAIM, '')
         user.is_active = True
 
 
