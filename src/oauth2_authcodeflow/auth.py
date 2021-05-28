@@ -85,7 +85,7 @@ class AuthenticationMixin:
             claims = id_claims.copy()
             claims.update(request_get(
                 request.session[constants.SESSION_OP_USERINFO_URL],
-                params={'access_token': access_token},
+                headers={'Authorization': f'{settings.OIDC_AUTHORIZATION_HEADER_PREFIX} {access_token}'},
             ).json())
             return claims
         else:
@@ -98,15 +98,15 @@ class AuthenticationMixin:
         elif callable(settings.OIDC_EMAIL_CLAIM):
             user.email = settings.OIDC_EMAIL_CLAIM(claims)
         else:
-            user.email = claims.get(settings.OIDC_EMAIL_CLAIM)
+            user.email = claims.get(settings.OIDC_EMAIL_CLAIM, '')
         if callable(settings.OIDC_FIRSTNAME_CLAIM):
             user.first_name = settings.OIDC_FIRSTNAME_CLAIM(claims)
         else:
-            user.first_name = claims.get(settings.OIDC_FIRSTNAME_CLAIM)
+            user.first_name = claims.get(settings.OIDC_FIRSTNAME_CLAIM, '')
         if callable(settings.OIDC_LASTNAME_CLAIM):
             user.last_name = settings.OIDC_LASTNAME_CLAIM(claims)
         else:
-            user.last_name = claims.get(settings.OIDC_LASTNAME_CLAIM)
+            user.last_name = claims.get(settings.OIDC_LASTNAME_CLAIM, '')
         user.is_active = True
 
 
@@ -147,7 +147,7 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             if use_pkce:
                 params['code_verifier'] = code_verifier
             resp = request_post(request.session[constants.SESSION_OP_TOKEN_URL], data=params)
-            if not resp:
+            if resp.status_code != 200:
                 raise SuspiciousOperation(f"{resp.status_code} {resp.text}")
             result = resp.json()
             id_token = result['id_token']

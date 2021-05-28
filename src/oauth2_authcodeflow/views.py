@@ -158,7 +158,7 @@ class CallbackView(CacheBaseView):
             # Make sure the user doesn't get to continue to be logged in in Django
             if request.user.is_authenticated:
                 auth.logout(request)
-            self._clear_cache()
+            self._clear_cache(request)
             url = failure_url + '?' + urlencode({'error': request.GET['error']})
         elif all((
             'code' in request.GET,

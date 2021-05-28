@@ -5,8 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 # Next
+## Changed
+- Use `Authorization` header for `USERINFO` instead of request param
 ## Fixed
 - register json web keys to session only if not already registered
+- fix error handling by adding required method parameter
+- `email`, `first_name` and `last_name` cannot be None. Fallback to empty string.
+- correctly check for status code ok when getting access token.
 
 # 0.2.1
 ## Fixed
