@@ -43,11 +43,12 @@ class OIDCUrlsMixin:
             session_conf = getattr(constants, 'SESSION_' + conf)
             if not session.get(session_conf):
                 raise ImproperlyConfigured(f'OIDC_{conf} is undefined')
-        if session.get(constants.SESSION_OP_JWKS_URL):
-            jwks_resp = request_get(session[constants.SESSION_OP_JWKS_URL])
-            jwks_resp.raise_for_status()
-            jwks = jwks_resp.json()['keys']
-        else:
-            jwks = []
-        session[constants.SESSION_OP_JWKS] = {key['kid']: key for key in jwks if key['kty'] == 'RSA' and key['use'] == 'sig'}
+        if not session.get(constants.SESSION_OP_JWKS):
+            if session.get(constants.SESSION_OP_JWKS_URL):
+                jwks_resp = request_get(session[constants.SESSION_OP_JWKS_URL])
+                jwks_resp.raise_for_status()
+                jwks = jwks_resp.json()['keys']
+            else:
+                jwks = []
+            session[constants.SESSION_OP_JWKS] = {key['kid']: key for key in jwks if key['kty'] == 'RSA' and key['use'] == 'sig'}
         return session
