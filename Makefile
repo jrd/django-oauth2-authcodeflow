@@ -1,10 +1,11 @@
-.PHONY: default clean venv bump_version build twine test_upload pypi_upload
+.PHONY: default clean venv project bump_version build twine test_upload pypi_upload
 
 default:
 	@echo "make TARGET"
 	@echo ""
 	@echo "TARGETS:"
 	@echo "  clean: delete all generated files"
+	@echo "  project: create a fake project"
 	@echo "  bump_version: use the 'what' variable to define what to bump: major, minor or patch"
 	@echo "  build: create source and wheel packages"
 	@echo "  test_upload: build and upload packages to testpypi (always do this first)"
@@ -19,6 +20,13 @@ venv:
 	    echo "You should activate the virtualenv: pipenv shell" >&2; \
 	    exit 1; \
 	fi
+
+project: venv
+	@django-admin startproject project && \
+	cd project && \
+	ln -s ../src/oauth2_authcodeflow ./ && \
+	sed -ri "/^INSTALLED_APPS/,/^\]/s/^\]/    'oauth2_authcodeflow',\n&/" project/settings.py && \
+	echo project created
 
 bump_version: venv
 	@if ! echo "$(what)" | grep -q '^major\|minor\|patch$$'; then \
