@@ -147,7 +147,7 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             if use_pkce:
                 params['code_verifier'] = code_verifier
             resp = request_post(request.session[constants.SESSION_OP_TOKEN_URL], data=params)
-            if not resp:
+            if resp.status_code != 200:
                 raise SuspiciousOperation(f"{resp.status_code} {resp.text}")
             result = resp.json()
             id_token = result['id_token']
