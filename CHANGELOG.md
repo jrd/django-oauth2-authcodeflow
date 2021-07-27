@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 # Next
+## Fixed
+- Prevent infinite redirect to authenticate view when using any middleware (session was not cleared properly)
+
+# 0.3.0
 ## Changed
 - Use `Authorization` header for `USERINFO` instead of request param
 - `token` field in `BlacklistedToken` table changed from `TextField` to `CharField(max_length=15000)` for MySql compatibility

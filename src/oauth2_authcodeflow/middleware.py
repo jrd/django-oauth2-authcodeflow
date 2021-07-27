@@ -1,34 +1,19 @@
-from logging import (
-    debug,
-    error,
-)
+from logging import debug, error
 from re import search
-from time import (
-    gmtime,
-    strftime,
-    time,
-)
+from time import gmtime, strftime, time
 from urllib.parse import urlencode
 
 from django.contrib.auth import BACKEND_SESSION_KEY
+from django.contrib.sessions.models import Session
 from django.core.exceptions import ImproperlyConfigured
-from django.http import (
-    HttpResponseRedirect,
-    JsonResponse,
-)
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.module_loading import import_string
 from requests import post as request_post
 
-from .auth import (
-    AuthenticationBackend,
-    BearerAuthenticationBackend,
-)
-from .conf import (
-    constants,
-    settings,
-)
+from .auth import AuthenticationBackend, BearerAuthenticationBackend
+from .conf import constants, settings
 from .models import BlacklistedToken
 
 
@@ -78,10 +63,10 @@ class Oauth2MiddlewareMixin(MiddlewareMixin):
             return False
 
     def is_api_request(self, request):
-        for url_pattern in settings.OIDC_MIDDLEWARE_API_URL_PATTERNS:
-            if search(url_pattern, request.path):
-                return True
-        return False
+        return any(
+            search(url_pattern, request.path)
+            for url_pattern in settings.OIDC_MIDDLEWARE_API_URL_PATTERNS
+        )
 
     def process_request(self, request):
         try:
@@ -89,17 +74,23 @@ class Oauth2MiddlewareMixin(MiddlewareMixin):
             if constants.SESSION_ID_TOKEN in request.session:
                 id_token = request.session[constants.SESSION_ID_TOKEN]
                 if BlacklistedToken.is_blacklisted(id_token):
+                    debug(f"token {id_token} is blacklisted")
                     raise MiddlewareException(f"token {id_token} is blacklisted")
             self.check_function(request)
             return
         except MiddlewareException as e:
-            next_url = request.build_absolute_uri() if request.method == 'GET' else request.session.get(constants.SESSION_NEXT_URL, '/')
-            failure_url = request.session.get(constants.SESSION_FAIL_URL, '/')
-            # Clear session values
-            for conf in dir(constants):
-                if conf.startswith('SESSION') and conf in request.session:
-                    del request.session[conf]
-            request.session.save()
+            if request.method == 'GET':
+                next_url = request.GET.get(settings.OIDC_REDIRECT_OK_FIELD_NAME)
+                if next_url is None:
+                    next_url = request.build_absolute_uri()
+                failure_url = request.GET.get(settings.OIDC_REDIRECT_ERROR_FIELD_NAME)
+                if failure_url is None:
+                    failure_url = request.session.get(constants.SESSION_FAIL_URL, '/')
+            else:
+                next_url = request.session.get(constants.SESSION_NEXT_URL, '/')
+                failure_url = request.session.get(constants.SESSION_FAIL_URL, '/')
+            # Destroy session
+            Session.objects.get(session_key=request.session.session_key).delete()
             if self.is_api_request(request):
                 # Return JSON response
                 return JsonResponse({
