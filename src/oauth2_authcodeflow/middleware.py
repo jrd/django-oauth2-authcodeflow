@@ -90,7 +90,10 @@ class Oauth2MiddlewareMixin(MiddlewareMixin):
                 next_url = request.session.get(constants.SESSION_NEXT_URL, '/')
                 failure_url = request.session.get(constants.SESSION_FAIL_URL, '/')
             # Destroy session
-            Session.objects.get(session_key=request.session.session_key).delete()
+            try:
+                Session.objects.get(session_key=request.session.session_key).delete()
+            except Session.DoesNotExist:
+                pass
             if self.is_api_request(request):
                 # Return JSON response
                 return JsonResponse({
