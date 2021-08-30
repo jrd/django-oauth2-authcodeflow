@@ -107,6 +107,8 @@ class AuthenticationMixin:
             user.last_name = settings.OIDC_LASTNAME_CLAIM(claims)
         else:
             user.last_name = claims.get(settings.OIDC_LASTNAME_CLAIM, '')
+        if callable(settings.OIDC_EXTEND_USER):
+            settings.OIDC_EXTEND_USER(user, claims)
         user.is_active = True
 
 
