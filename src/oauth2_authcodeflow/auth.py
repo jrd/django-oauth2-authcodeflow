@@ -1,9 +1,6 @@
-from logging import warning
+from logging import debug, warning
 from time import time
-from typing import (
-    Dict,
-    Optional,
-)
+from typing import Dict, Optional
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
@@ -14,10 +11,7 @@ from jose import jwt
 from requests import get as request_get
 from requests import post as request_post
 
-from .conf import (
-    constants,
-    settings,
-)
+from .conf import constants, settings
 from .models import BlacklistedToken
 from .utils import OIDCUrlsMixin
 
@@ -66,7 +60,9 @@ class AuthenticationMixin:
         return claims
 
     def validate_claims(self, claims):
-        for expected in [settings.OIDC_OP_EXPECTED_EMAIL_CLAIM] + list(settings.OIDC_OP_EXPECTED_CLAIMS):
+        expected_list = [settings.OIDC_OP_EXPECTED_EMAIL_CLAIM] + list(settings.OIDC_OP_EXPECTED_CLAIMS)
+        debug(f"Validate {claims=} against expected {expected_list}")
+        for expected in expected_list:
             if expected not in claims:
                 raise SuspiciousOperation(f"'{expected}' claim was expected")
 
@@ -93,12 +89,13 @@ class AuthenticationMixin:
 
     def update_user(self, user: AbstractBaseUser, claims: Dict) -> None:
         """udate the django user with data from the claims"""
-        if settings.OIDC_EMAIL_CLAIM is None:
-            user.email = settings.OIDC_OP_EXPECTED_EMAIL_CLAIM
-        elif callable(settings.OIDC_EMAIL_CLAIM):
+        if callable(settings.OIDC_EMAIL_CLAIM):
             user.email = settings.OIDC_EMAIL_CLAIM(claims)
         else:
-            user.email = claims.get(settings.OIDC_EMAIL_CLAIM, '')
+            email_claim_name = settings.OIDC_EMAIL_CLAIM
+            if not email_claim_name:
+                email_claim_name = settings.OIDC_OP_EXPECTED_EMAIL_CLAIM
+            user.email = claims.get(email_claim_name, '')
         if callable(settings.OIDC_FIRSTNAME_CLAIM):
             user.first_name = settings.OIDC_FIRSTNAME_CLAIM(claims)
         else:
