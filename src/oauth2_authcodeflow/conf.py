@@ -114,6 +114,8 @@ DEFAULTS = {
     'OIDC_LASTNAME_CLAIM': 'family_name',
     # Callable (that takes the user and the claims as arguments) to extend user with other potential additional information available in the claims
     'OIDC_EXTEND_USER': None,
+    # Scramble the password on each SSO connection/renewal. If False, it will only scramble it when creating an account.
+    'OIDC_UNUSABLE_PASSWORD': True,
     'OIDC_BLACKLIST_TOKEN_TIMEOUT_SECONDS': 7 * 86400,  # 7 days
     # Only used when using authorization in header:
     #   Authorization: Bearer id_token
