@@ -6,8 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 # Next
 ## Added
-- Allow `user` extension with a callable using `claims`
 - Allow to scramble the password only when creating an account instead of each SSO connection/renewal
+
+# 0.4.0
+## Added
+- Allow `user` extension with a callable using `claims`
 ## Fixed
 - User `email` field was filled with raw `email` value instead of actual value if `OIDC_EMAIL_CLAIM` was not set.
 
