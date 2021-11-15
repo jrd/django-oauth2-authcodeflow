@@ -69,9 +69,10 @@ class AuthenticationMixin:
     def get_or_create_user(self, request, id_claims: Dict, access_token: str) -> AbstractBaseUser:
         claims = self.get_full_claims(request, id_claims, access_token)
         username = settings.OIDC_DJANGO_USERNAME_FUNC(claims)
-        user, _ = self.UserModel.objects.get_or_create(username=username)
+        user, created = self.UserModel.objects.get_or_create(username=username)
         self.update_user(user, claims)
-        user.set_unusable_password()
+        if settings.OIDC_UNUSABLE_PASSWORD or created:
+            user.set_unusable_password()
         user.save()
         return user
 
@@ -88,7 +89,7 @@ class AuthenticationMixin:
             return id_claims
 
     def update_user(self, user: AbstractBaseUser, claims: Dict) -> None:
-        """udate the django user with data from the claims"""
+        """update the django user with data from the claims"""
         if callable(settings.OIDC_EMAIL_CLAIM):
             user.email = settings.OIDC_EMAIL_CLAIM(claims)
         else:
