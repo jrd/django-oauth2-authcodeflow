@@ -124,7 +124,7 @@ class CallbackView(CacheBaseView):
         self.SessionStore = import_module(settings.SESSION_ENGINE).SessionStore
 
     def get(self, request):
-        debug(f"{request.session.session_key=}, {request.session.keys()=}")
+        debug(f"request.session.session_key={request.session.session_key}, request.session.keys()={request.session.keys()}")
         if 'state' in request.GET:
             state = request.GET['state']
             try:
@@ -143,7 +143,7 @@ class CallbackView(CacheBaseView):
                     for key, value in old_session_items:
                         if key not in request.session:
                             request.session[key] = value
-                    debug(f"request.session replaced with {request.session.session_key=}")
+                    debug(f"request.session replaced with request.session.session_key={request.session.session_key}")
                 except (jwt.JWTError, KeyError):
                     return HttpResponseBadRequest("state appears to be a JWT but the signature failed".encode('utf8'))
         else:

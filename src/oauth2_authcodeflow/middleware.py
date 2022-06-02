@@ -35,7 +35,7 @@ class Oauth2MiddlewareMixin(MiddlewareMixin):
                 constants.OIDC_URL_LOGOUT_BY_OP_NAME,
             )
         ) + tuple(settings.OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS)
-        debug(f"{self.exempt_urls=}")
+        debug(f"self.exempt_urls={self.exempt_urls}")
         super().__init__(get_response)
 
     def is_oidc_enabled(self, request):
@@ -53,7 +53,7 @@ class Oauth2MiddlewareMixin(MiddlewareMixin):
         """
         # Do not attempt to refresh the session if the OIDC backend is not used
         is_oidc_enabled = self.is_oidc_enabled(request)
-        debug(f"{is_oidc_enabled=}, {request.path=}, {self.exempt_urls=}")
+        debug(f"is_oidc_enabled={is_oidc_enabled}, request.path={request.path}, self.exempt_urls={self.exempt_urls}")
         if is_oidc_enabled:
             for url_pattern in self.exempt_urls:
                 if search(url_pattern, request.path):
@@ -70,7 +70,7 @@ class Oauth2MiddlewareMixin(MiddlewareMixin):
 
     def process_request(self, request):
         try:
-            debug(f"{self=}, {request.session.session_key=}, {request.session.keys()=}")
+            debug(f"self={self}, request.session.session_key={request.session.session_key}, request.session.keys()={request.session.keys()}")
             if constants.SESSION_ID_TOKEN in request.session:
                 id_token = request.session[constants.SESSION_ID_TOKEN]
                 if BlacklistedToken.is_blacklisted(id_token):

@@ -8,9 +8,9 @@ flake8 = "*"
 semver = "*"
 
 [packages]
-django = "<4.0"
+django = ">=3.0,<4.1"
 "python-jose[cryptography]" = "*"
 requests = "*"
 
 [requires]
-python_version = "3.8"
+python_version = "3.7"
