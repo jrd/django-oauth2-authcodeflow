@@ -9,13 +9,14 @@ from typing import (
 from django.conf import settings as dj_settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
+from logging import warning
 
 from . import constants  # noqa F401
 
 
 def import_string_if_not_func(value: Union[str, Callable], attr: str) -> Callable:
     try:
-        return value if callable(value) else import_string(value)
+        return value if value is None or callable(value) else import_string(value)
     except ImportError as e:
         raise ImportError(f"Could not import '{value}' for API setting '{attr}'. {e.__class__.__name__}: {e}.")
 
@@ -112,7 +113,9 @@ DEFAULTS = {
     'OIDC_FIRSTNAME_CLAIM': 'given_name',
     # You can also provide a lambda that takes all the claims as argument and return a lastname
     'OIDC_LASTNAME_CLAIM': 'family_name',
-    # Callable (that takes the user and the claims as arguments) to extend user with other potential additional information available in the claims
+    # Callable (that takes the user, the claims and optionaly the request and access_token as arguments)
+    # to extend user with other potential additional information available in the claims or from another request
+    # You can also specify a dotted path to a callable
     'OIDC_EXTEND_USER': None,
     # Scramble the password on each SSO connection/renewal. If False, it will only scramble it when creating an account.
     'OIDC_UNUSABLE_PASSWORD': True,
@@ -137,6 +140,7 @@ IMPORT_STRINGS = [
     'OIDC_VIEW_TOTAL_LOGOUT',
     'OIDC_VIEW_LOGOUT_BY_OP',
     'OIDC_DJANGO_USERNAME_FUNC',
+    'OIDC_EXTEND_USER',
 ]
 
 
@@ -162,6 +166,8 @@ class Settings:
         # Coerce import strings into classes
         if attr in self.import_strings:
             val = import_string_if_not_func(val, attr)
+            if val and not callable(val):
+                warning(f"Setting '{attr}' does not resolve to a callable")
         # Cache the result
         setattr(self, attr, val)
         return val

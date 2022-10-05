@@ -147,7 +147,7 @@ Specific OIDC settings:
 | `OIDC_EMAIL_CLAIM` | Claim name for email<br>`None` value means use `OIDC_OP_EXPECTED_EMAIL_CLAIM` value<br>You can also provide a lambda that takes all the claims as argument and return an email | `None` |
 | `OIDC_FIRSTNAME_CLAIM` | You can also provide a lambda that takes all the claims as argument and return a firstname | `'given_name'` |
 | `OIDC_LASTNAME_CLAIM` | You can also provide a lambda that takes all the claims as argument and return a lastname | `'family_name'` |
-| `OIDC_EXTEND_USER` | Callable that takes the user and claims as arguments and that can extend user properties | `None` |
+| `OIDC_EXTEND_USER` | Callable that takes the `user`, the `claims` and optionaly the `request` and `access_token` as arguments and that can extend user properties.<br>You can also specify a dotted path to a callable. | `None` |
 | `OIDC_UNUSABLE_PASSWORD` | Scramble the password on each SSO connection/renewal.<br>If `False`, it will only scramble it when creating an account | `True` |
 | `OIDC_BLACKLIST_TOKEN_TIMEOUT_SECONDS` | 7 days by default | `7 * 86400` |
 | `OIDC_AUTHORIZATION_HEADER_PREFIX` | Only used when using authorization in header:<br>`Authorization: Bearer id_token`<br>This is only possible if `oauth2_authcodeflow.middleware.BearerAuthMiddleware` has been added to `MIDDLEWARE` setting list. | `'Bearer'` |

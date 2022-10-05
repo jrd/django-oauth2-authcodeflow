@@ -1,3 +1,4 @@
+from inspect import signature
 from logging import debug, warning
 from time import time
 from typing import Dict, Optional
@@ -70,9 +71,7 @@ class AuthenticationMixin:
         claims = self.get_full_claims(request, id_claims, access_token)
         username = settings.OIDC_DJANGO_USERNAME_FUNC(claims)
         user, created = self.UserModel.objects.get_or_create(username=username)
-        self.update_user(user, claims)
-        if settings.OIDC_UNUSABLE_PASSWORD or created:
-            user.set_unusable_password()
+        self.update_user(user, created, claims, request, access_token)
         user.save()
         return user
 
@@ -88,7 +87,7 @@ class AuthenticationMixin:
         else:
             return id_claims
 
-    def update_user(self, user: AbstractBaseUser, claims: Dict) -> None:
+    def update_user(self, user: AbstractBaseUser, created: bool, claims: Dict, request, access_token: str) -> None:
         """update the django user with data from the claims"""
         if callable(settings.OIDC_EMAIL_CLAIM):
             user.email = settings.OIDC_EMAIL_CLAIM(claims)
@@ -105,8 +104,14 @@ class AuthenticationMixin:
             user.last_name = settings.OIDC_LASTNAME_CLAIM(claims)
         else:
             user.last_name = claims.get(settings.OIDC_LASTNAME_CLAIM, '')
+        if settings.OIDC_UNUSABLE_PASSWORD or created:
+            user.set_unusable_password()
         if callable(settings.OIDC_EXTEND_USER):
-            settings.OIDC_EXTEND_USER(user, claims)
+            extend_user = settings.OIDC_EXTEND_USER
+            if len(signature(extend_user).parameters) > 2:
+                extend_user(user, claims, request, access_token)
+            else:  # backward compatibility
+                extend_user(user, claims)
         user.is_active = True
 
 
