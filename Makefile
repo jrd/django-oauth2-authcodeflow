@@ -12,8 +12,8 @@ default:
 	@echo "  pypi_upload: build and upload packages to pypi"
 
 clean:
-	@rm -rf build dist src/*.egg-info 2>/dev/null
-	@find src -type d -name __pycache__ -prune -exec rm -rf '{}' \;
+	@rm -rf build dist *.egg-info 2>/dev/null
+	@find . -type d -name __pycache__ -prune -exec rm -rf '{}' \;
 
 venv:
 	@if [ -z "$$VIRTUAL_ENV" ]; then \
@@ -24,21 +24,36 @@ venv:
 project: venv
 	@django-admin startproject project && \
 	cd project && \
-	ln -s ../src/oauth2_authcodeflow ./ && \
+	ln -s ../oauth2_authcodeflow ./ && \
 	sed -ri "/^INSTALLED_APPS/,/^\]/s/^\]/    'oauth2_authcodeflow',\n&/" project/settings.py && \
 	echo project created
 
 bump_version: venv
-	@if ! echo "$(what)" | grep -q '^major\|minor\|patch$$'; then \
-	    echo "You should specify 'what' variable with one of major, minor or patch" >&2; \
-	    exit 1; \
-	fi; \
-	VER_MODULE="$$(sed -rn '/^version =/{s/.* attr: (.*)/\1/p}' setup.cfg | rev | cut -d. -f2- | rev)"; \
-	VER_VAR="$$(sed -rn '/^version =/{s/.* attr: (.*)/\1/p}' setup.cfg | rev | cut -d. -f1 | rev)"; \
-	NEW_VER="$$(python -c 'from src.'$${VER_MODULE}' import '$${VER_VAR}'; from semver import parse_version_info; print(parse_version_info(__version__).bump_$(what)())')"; \
-	OLD_VER="$$(sed -rn "/^$${VER_VAR} =/s/.*'(.*)'/\1/p" src/$${VER_MODULE}/__init__.py)"; \
-	echo "$${OLD_VER} → $${NEW_VER}"; \
-	sed -ri "/^$${VER_VAR} =/s/'.*'/'$${NEW_VER}'/" src/$${VER_MODULE}/__init__.py
+	@printf "\
+	from sys import argv, stderr, exit\n\
+	from configparser import ConfigParser, NoOptionError\n\
+	from semver import parse_version_info\n\
+	from io import StringIO\n\
+	from re import sub\n\
+	\n\
+	what = next(iter(argv[1:]), None)\n\
+	if what not in ('major', 'minor', 'patch'):\n\
+		print(\"You should specify 'what' variable with one of major, minor or patch\", file=stderr)\n\
+		exit(1)\n\
+	config = ConfigParser()\n\
+	config.read('setup.cfg')\n\
+	try:\n\
+		version = config.get('metadata', 'version')\n\
+	except NoOptionError:\n\
+		version = ''\n\
+	new_version = getattr(parse_version_info(version), f'bump_{what}')()\n\
+	print(f\"{version} -> {new_version}\")\n\
+	config.set('metadata', 'version', str(new_version))\n\
+	sio = StringIO()\n\
+	config.write(sio)\n\
+	with open('setup.cfg', 'w') as f:\n\
+		f.write(sub(r'\s+\\\\n', '\\\\n', sio.getvalue()))\n\
+	" | python - $(what)
 
 build: clean venv
 	python setup.py sdist bdist_wheel

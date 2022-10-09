@@ -1,6 +1,8 @@
-from setuptools import setup, find_packages
 from configparser import ConfigParser
 from json import loads
+
+from setuptools import find_packages, setup
+
 # https://github.com/pypa/sampleproject/blob/master/setup.py
 # https://packaging.python.org/guides/distributing-packages-using-setuptools
 
@@ -10,49 +12,53 @@ def pkg_clean_version(pkg_name, pkg_info):
     if pkg_info.startswith('{'):
         pkg_info = loads(pkg_info)
     else:
-        return pkg_name if pkg_info.strip() == "*" else f"{pkg_name}{pkg_info}"
+        return pkg_name if pkg_info.strip() == '*' else f'{pkg_name}{pkg_info}'
     if not pkg_info:
         return pkg_name
-    version = pkg_info.get("version", "").strip()
-    editable = pkg_info.get("editable", False)
-    markers = pkg_info["markers"].strip() if pkg_info.get("markers") else ""
-    extras = pkg_info.get("extras", [])
-    subdir = pkg_info.get("subdirectory", [])
-    git = pkg_info.get("git", "").strip()
-    path = pkg_info.get("path", "").strip()
-    ref = pkg_info.get("ref", "").strip()
-    rstr = ""
+    version = pkg_info.get('version', '').strip()
+    editable = pkg_info.get('editable', False)
+    markers = pkg_info['markers'].strip() if pkg_info.get('markers') else ''
+    extras = pkg_info.get('extras', [])
+    subdir = pkg_info.get('subdirectory', [])
+    git = pkg_info.get('git', '').strip()
+    path = pkg_info.get('path', '').strip()
+    ref = pkg_info.get('ref', '').strip()
+    rstr = ''
     if not editable:
         rstr += pkg_name
     if extras:
-        rstr += "[{}]".format(', '.join([s.strip() for s in extras]))
+        rstr += '[{}]'.format(', '.join([s.strip() for s in extras]))
     if not editable:
-        if version and version != "*":
+        if version and version != '*':
             rstr += version.strip()
     elif git:
-        ref = "@" + ref if ref else ref
-        rstr = "-e git+" + git + ref + "#egg=" + pkg_name
+        ref = '@' + ref if ref else ref
+        rstr = '-e git+' + git + ref + '#egg=' + pkg_name
         if subdir:
             rstr += '&subdirectory=' + subdir
     else:
-        rstr = "-e " + path
+        rstr = '-e ' + path
     if markers:
-        rstr += " ; " + markers
+        rstr += ' ; ' + markers
     return rstr
 
 
-def parse_pip_file(pipfile):
+def python_requires_from_pipfile(pipfile='Pipfile'):
+    config = ConfigParser()
+    config.read(pipfile)
+    python_version = config._sections.get('requires', {}).get('python_version', None)
+    return f'>={python_version}' if python_version else '*'
+
+
+def requirements_from_file(pipfile='Pipfile'):
     config = ConfigParser()
     config.read(pipfile)
     return [pkg_clean_version(name.strip('"'), info.strip('"')) for name, info in config._sections.get('packages', {}).items()]
 
 
-requirements = parse_pip_file('Pipfile')
-
-
 setup(
-    packages=find_packages(where='src'),
-    package_dir={'': 'src'},
+    packages=find_packages(where='.'),
     include_package_data=True,
-    install_requires=requirements,
+    python_requires=python_requires_from_pipfile(),
+    install_requires=requirements_from_file(),
 )
