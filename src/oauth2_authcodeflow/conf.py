@@ -78,6 +78,10 @@ DEFAULTS = {
     # You can also include the `profile` scope to get more (like names, …) info in the `id_token` (recommended).
     # You can also get a `refresh_token` by specifying the `offline_access` scope.
     'OIDC_RP_SCOPES': ['openid', 'email', 'profile', 'offline_access'],
+    # The OpenID Connect list of individual claims to request (optional).
+    'OIDC_RP_USERINFO_CLAIMS': None,
+    # The OpenID Connect list of id token claims to request (optional).
+    'OIDC_RP_TOKEN_CLAIMS': None,
     # Sets the algorithms the IdP may use to sign ID tokens.
     # Typical values ar 'HS256' (no key required) and 'RS256' (public key required)
     # The public keys might be defined in `OIDC_RP_IDP_SIGN_KEY` or deduced using the `OIDC_OP_JWKS_URL` config.
