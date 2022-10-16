@@ -1,0 +1,7 @@
+title = "Django Oauth2 AuthCodeFlow Config"
+[allowlist]
+stopwords = [
+    'OIDC_AUTHORIZATION_HEADER_PREFIX',
+    'oidc_authentication',
+    'oidc_op_authorization_url',
+]

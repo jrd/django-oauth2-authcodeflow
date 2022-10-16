@@ -4,13 +4,16 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Tuple,
 )
 
 from django.conf import settings as dj_settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.module_loading import import_string
 
-from . import constants  # noqa F401
+from . import constants
+
+assert constants
 
 
 def import_string_as_func(value: str, attr: str) -> Callable:
@@ -29,7 +32,7 @@ def get_default_django_username(claims: Dict) -> str:
 
 func = type(lambda: 0)
 
-DEFAULTS = {
+DEFAULTS: Dict[str, Tuple[Any, Any]] = {
     'OIDC_VIEW_AUTHENTICATE': (type, f'{__package__}.views.AuthenticateView'),
     'OIDC_VIEW_CALLBACK': (type, f'{__package__}.views.CallbackView'),
     'OIDC_VIEW_LOGOUT': (type, f'{__package__}.views.LogoutView'),

@@ -1,19 +1,35 @@
-from logging import debug, error
+from logging import (
+    debug,
+    error,
+)
 from re import search
-from time import gmtime, strftime, time
+from time import (
+    gmtime,
+    strftime,
+    time,
+)
 from urllib.parse import urlencode
 
 from django.contrib.auth import BACKEND_SESSION_KEY
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ImproperlyConfigured
-from django.http import HttpResponseRedirect, JsonResponse
+from django.http import (
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.urls import reverse
 from django.utils.deprecation import MiddlewareMixin
 from django.utils.module_loading import import_string
 from requests import post as request_post
 
-from .auth import AuthenticationBackend, BearerAuthenticationBackend
-from .conf import constants, settings
+from .auth import (
+    AuthenticationBackend,
+    BearerAuthenticationBackend,
+)
+from .conf import (
+    constants,
+    settings,
+)
 from .models import BlacklistedToken
 
 

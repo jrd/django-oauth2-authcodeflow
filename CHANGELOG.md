@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `OIDC_EXTEND_USER` callable can now takes a `request` and `access_token` as additional arguments (compatibility is assured).
 - Migrate can raise an `IntegrityError` (ticket #7).
 - All parameters that accept a function can also accept a dotted string to import the function.
+- Migrate from `pipenv` to `poetry` system.
 
 # 0.7.0
 ## Added

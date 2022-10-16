@@ -1,0 +1,11 @@
+include:
+  - local: '/.gitlab/python-ci.yml'
+.linter:
+  extends:
+    - .python
+  stage: test
+  only:
+    - branches
+  script:
+    - 'make install_dev_deps'
+    - 'make linter'

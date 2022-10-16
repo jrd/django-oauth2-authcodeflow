@@ -1,0 +1,15 @@
+include:
+  - local: '/.gitlab/python-ci.yml'
+.type_checker:
+  extends:
+    - .python
+  stage: test
+  only:
+    - branches
+  script:
+    - 'make install_dev_deps'
+    - 'make type'
+  artifacts:
+    when: on_failure
+    paths:
+      - reports/mypy.log

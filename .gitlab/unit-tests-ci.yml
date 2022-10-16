@@ -1,0 +1,11 @@
+include:
+  - local: '/.gitlab/python-ci.yml'
+.unit_tests:
+  extends:
+    - .python
+  stage: test
+  only:
+    - branches
+  script:
+    - 'make install_all_deps'
+    - 'make tests'
