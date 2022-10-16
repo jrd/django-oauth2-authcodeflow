@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 # Next
 ## Changed
 - `OIDC_EXTEND_USER` callable can now takes a `request` and `access_token` as additional arguments (compatibility is assured).
+- Migrate can raise an `IntegrityError` (ticket #7).
 
 # 0.7.0
 ## Added
