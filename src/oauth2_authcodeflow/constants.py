@@ -5,6 +5,7 @@ for key in [
     'oidc_op_jwks_url',
     'oidc_op_jwks',
     'oidc_op_end_session_url',
+    'oidc_op_claims_parameter_supported',
     'oidc_next_url',
     'oidc_fail_url',
     'oidc_state',

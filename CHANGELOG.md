@@ -5,9 +5,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 # Next
+## Added
+- Allow to specify `userinfo` and `id_token` individual claims to get along with the id token request if the OP supports it (Eric Plaster, mr !12).
 ## Changed
 - `OIDC_EXTEND_USER` callable can now takes a `request` and `access_token` as additional arguments (compatibility is assured).
 - Migrate can raise an `IntegrityError` (ticket #7).
+- All parameters that accept a function can also accept a dotted string to import the function.
 
 # 0.7.0
 ## Added
