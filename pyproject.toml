@@ -1,0 +1,53 @@
+[tool.poetry]
+name = "django-oauth2-authcodeflow"
+version = "0.7.0"
+description = "Authenticate with any OpenId Connect/Oauth2 provider through authorization code flow. PKCE is also supported."
+authors = ["Cyrille Pontvieux <cpontvieux@systra.com>"]
+maintainers = ["Cyrille Pontvieux <cyrille@enialis.net>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/jrd/django-oauth2-authcodeflow"
+repository = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow"
+keywords = ["oauth2", "oidc", "openid"]
+# https://pypi.org/classifiers/
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Environment :: Web Environment",
+    "Programming Language :: Python :: 3.11",  # be explicit that this is compatible with python 3.11
+    "Framework :: Django",
+    "Framework :: Django :: 3.2",
+    "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
+    "Topic :: Internet :: WWW/HTTP :: Session",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+packages = [{include = "oauth2_authcodeflow"}]
+include = ["CHANGELOG.md", "OP.md"]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/issues"
+"Merge Requests" = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/merge_requests"
+
+[tool.poetry.dependencies]
+python = "^3.7"
+django = ">=3.2,<5"
+python-jose = {extras = ["cryptography"], version = "*"}
+requests = "*"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "*"
+semver = "*"
+
+[[tool.poetry.source]]
+name = "testpypi"
+url = "https://test.pypi.org/legacy/"
+default = false
+secondary = false
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
