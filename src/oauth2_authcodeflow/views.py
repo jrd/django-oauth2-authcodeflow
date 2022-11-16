@@ -1,3 +1,4 @@
+import json
 from base64 import urlsafe_b64encode
 from hashlib import sha256
 from importlib import import_module
@@ -80,6 +81,15 @@ class AuthenticateView(CacheBaseView):
             'scope': ' '.join(scopes),
             'redirect_uri': request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
         }
+        # check for claims request parameter
+        if request.session.get(constants.OIDC_CLAIMS_PARAMETER_SUPPORTED, False):
+            claims_parameter = {}
+            if settings.OIDC_RP_USERINFO_CLAIMS:
+                claims_parameter['userinfo'] = settings.OIDC_RP_USERINFO_CLAIMS
+            if settings.OIDC_RP_TOKEN_CLAIMS:
+                claims_parameter['id_token'] = settings.OIDC_RP_TOKEN_CLAIMS
+            if claims_parameter:
+                auth_params['claims'] = json.dumps(claims_parameter)
         if 'offline_access' in scopes or settings.OIDC_RP_FORCE_CONSENT_PROMPT:
             auth_params['prompt'] = 'consent'
         if use_pkce:

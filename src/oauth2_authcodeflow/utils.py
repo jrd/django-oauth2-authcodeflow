@@ -19,6 +19,7 @@ class OIDCUrlsMixin:
                 constants.SESSION_OP_USERINFO_URL not in session,
                 constants.SESSION_OP_JWKS_URL not in session,
                 constants.SESSION_OP_END_SESSION_URL not in session,
+                constants.SESSION_OP_CLAIMS_PARAMETER_SUPPORTED not in session,
             )):
                 doc_resp = request_get(settings.OIDC_OP_DISCOVERY_DOCUMENT_URL)
                 doc_resp.raise_for_status()
@@ -28,6 +29,7 @@ class OIDCUrlsMixin:
                 session[constants.SESSION_OP_USERINFO_URL] = doc.get('userinfo_endpoint')
                 session[constants.SESSION_OP_JWKS_URL] = doc.get('jwks_uri')
                 session[constants.SESSION_OP_END_SESSION_URL] = doc.get('end_session_endpoint')
+                session[constants.SESSION_OP_CLAIMS_PARAMETER_SUPPORTED] = doc.get(constants.OIDC_CLAIMS_PARAMETER_SUPPORTED, False) is True
         elif any((
             settings.OIDC_OP_AUTHORIZATION_URL,
             settings.OIDC_OP_TOKEN_URL,
@@ -39,6 +41,7 @@ class OIDCUrlsMixin:
                 session_conf = getattr(constants, 'SESSION_' + conf)
                 if session_conf not in session:
                     session[session_conf] = getattr(settings, 'OIDC_' + conf)
+            session[constants.SESSION_OP_CLAIMS_PARAMETER_SUPPORTED] = True
         confs = ['OP_AUTHORIZATION_URL', 'OP_TOKEN_URL']
         if settings.OIDC_OP_FETCH_USER_INFO:
             confs.append('OP_USERINFO_URL')

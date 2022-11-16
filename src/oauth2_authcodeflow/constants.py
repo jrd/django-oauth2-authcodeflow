@@ -5,6 +5,7 @@ for key in [
     'oidc_op_jwks_url',
     'oidc_op_jwks',
     'oidc_op_end_session_url',
+    'oidc_op_claims_parameter_supported',
     'oidc_next_url',
     'oidc_fail_url',
     'oidc_state',
@@ -24,3 +25,4 @@ OIDC_URL_LOGOUT_NAME = 'oidc_logout'
 OIDC_URL_TOTAL_LOGOUT_NAME = 'oidc_total_logout'
 OIDC_URL_LOGOUT_BY_OP_NAME = 'oidc_logout_by_op'
 OIDC_FROM_CLI_QUERY_STRING = 'from_cli'
+OIDC_CLAIMS_PARAMETER_SUPPORTED = 'claims_parameter_supported'
