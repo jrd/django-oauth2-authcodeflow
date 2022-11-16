@@ -2,7 +2,11 @@ import json
 from base64 import urlsafe_b64encode
 from hashlib import sha256
 from importlib import import_module
-from logging import warning, debug
+from logging import (
+    debug,
+    warning,
+)
+from urllib.parse import parse_qs
 
 from django.contrib import auth
 from django.core.exceptions import SuspiciousOperation
@@ -18,14 +22,13 @@ from django.utils.http import urlencode
 from django.views.decorators.cache import never_cache
 from django.views.generic import View
 from jose import jwt
-from urllib.parse import parse_qs
 
 from .conf import (
     constants,
     settings,
 )
-from .utils import OIDCUrlsMixin
 from .models import BlacklistedToken
+from .utils import OIDCUrlsMixin
 
 
 class CacheBaseView(View, OIDCUrlsMixin):

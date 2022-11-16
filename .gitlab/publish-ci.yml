@@ -1,0 +1,16 @@
+include:
+  - local: '/.gitlab/python-ci.yml'
+.publish:
+  extends:
+    - .python
+  stage: publish
+  when: manual
+  only:
+    - tags
+  before_script:
+    - |
+  script:
+    - |
+      set -e
+      poetry config pypi-token.pypi "$PYPI_TOKEN"
+      make pypi_upload

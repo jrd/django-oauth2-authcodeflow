@@ -5,6 +5,7 @@ from django.core.management.base import (
 from django.http import HttpRequest
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+
 from oauth2_authcodeflow.conf import constants
 
 

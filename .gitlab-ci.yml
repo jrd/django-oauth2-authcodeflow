@@ -1,10 +1,42 @@
-# You can override the included template(s) by including variable overrides
-# See https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#priority-of-environment-variables
-stages:
-- test
-sast:
-  stage: test
 include:
-- template: Security/SAST.gitlab-ci.yml
+  - local: /.gitlab/security-ci.yml
+  - local: /.gitlab/secret-ci.yml
+  - local: /.gitlab/linter-ci.yml
+  - local: /.gitlab/type-checker-ci.yml
+  - local: /.gitlab/unit-tests-ci.yml
+  - local: /.gitlab/tag-ci.yml
+  - local: /.gitlab/publish-ci.yml
+stages:
+  - test
+  - release
+  - publish
+security:
+  extends: .security
+secret:
+  extends: .secret
+linter:
+  extends: .linter
+type_checker:
+  extends: .type_checker
+  # the code is not ready yet
+  allow_failure: true
+unit_tests:
+  extends: .unit_tests
+  # the code is not ready yet
+  allow_failure: true
+.tag_base:
+  extends: .tag
+  needs:
+    - security
+    - secret
+    - linter
+    - type_checker
+    - unit_tests
+tag:major:
+  extends: .tag_base
+tag:minor:
+  extends: .tag_base
+tag:patch:
+  extends: .tag_base
+publish:
+  extends: .publish

@@ -1,23 +1,42 @@
 from inspect import signature
-from logging import debug, warning
+from logging import (
+    debug,
+    warning,
+)
 from time import time
-from typing import Dict, Optional
+from typing import (
+    Dict,
+    Optional,
+)
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    AbstractUser,
+)
 from django.core.exceptions import SuspiciousOperation
+from django.http.request import HttpRequest
 from django.urls import reverse
-from jose import jwt
+from jose import (
+    JWTError,
+    jwt,
+)
 from requests import get as request_get
 from requests import post as request_post
 
-from .conf import constants, settings
+from .conf import (
+    constants,
+    settings,
+)
 from .models import BlacklistedToken
 from .utils import OIDCUrlsMixin
 
 
 class AuthenticationMixin:
+    def __init__(self, *args, **kwargs):
+        self.UserModel = get_user_model()
+
     def validate_and_decode_id_token(self, id_token: str, nonce: Optional[str], jwks: Dict) -> Dict:
         header = jwt.get_unverified_header(id_token)
         if 'alg' not in header:
@@ -54,7 +73,7 @@ class AuthenticationMixin:
                     'verify_at_hash': False,
                 },
             )
-        except jwt.JWTError as e:
+        except JWTError as e:
             raise SuspiciousOperation("JWT token verification failed: " + str(e))
         if nonce is not None and claims.get('nonce') != nonce:
             raise SuspiciousOperation("JWT Nonce verification failed")
@@ -67,7 +86,7 @@ class AuthenticationMixin:
             if expected not in claims:
                 raise SuspiciousOperation(f"'{expected}' claim was expected")
 
-    def get_or_create_user(self, request, id_claims: Dict, access_token: str) -> AbstractBaseUser:
+    def get_or_create_user(self, request, id_claims: Dict, access_token: str) -> AbstractUser:
         claims = self.get_full_claims(request, id_claims, access_token)
         username = settings.OIDC_DJANGO_USERNAME_FUNC(claims)
         user, created = self.UserModel.objects.get_or_create(username=username)
@@ -87,7 +106,7 @@ class AuthenticationMixin:
         else:
             return id_claims
 
-    def update_user(self, user: AbstractBaseUser, created: bool, claims: Dict, request, access_token: str) -> None:
+    def update_user(self, user: AbstractUser, created: bool, claims: Dict, request, access_token: str) -> None:
         """update the django user with data from the claims"""
         if callable(settings.OIDC_EMAIL_CLAIM):
             user.email = settings.OIDC_EMAIL_CLAIM(claims)
@@ -116,15 +135,23 @@ class AuthenticationMixin:
 
 
 class AuthenticationBackend(ModelBackend, AuthenticationMixin):
-    def __init__(self, *args, **kwargs):
-        self.UserModel = get_user_model()
+    def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None, **kwargs) -> Optional[AbstractBaseUser]:
+        """Authenticates users using OpenID Connect Authorization code flow."""
+        use_pkce: bool = kwargs.pop('use_pkce')
+        code: str = kwargs.pop('code')
+        state: Optional[str] = kwargs.pop('state', None)
+        nonce: Optional[str] = kwargs.pop('nonce', None)
+        code_verifier: Optional[str] = kwargs.pop('code_verifier', None)
+        return self.authenticate_oauth2(request, use_pkce, code, state, nonce, code_verifier, **kwargs)
 
-    def authenticate(self, request,
-                     use_pkce: bool,
-                     code: str,
-                     state: Optional[str], nonce: Optional[str],
-                     code_verifier: Optional[str],
-                     **kwargs) -> AbstractBaseUser:
+    def authenticate_oauth2(self,
+                            request: HttpRequest,
+                            use_pkce: bool,
+                            code: str,
+                            state: Optional[str],
+                            nonce: Optional[str],
+                            code_verifier: Optional[str],
+                            **kwargs) -> Optional[AbstractBaseUser]:
         """Authenticates users using OpenID Connect Authorization code flow."""
         if not request:
             return None
@@ -184,11 +211,11 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
 
 class BearerAuthenticationBackend(ModelBackend, AuthenticationMixin, OIDCUrlsMixin):
     def __init__(self, *args, **kwargs):
-        self.UserModel = get_user_model()
+        super().__init__(*args, **kwargs)
         self.authorization_prefix = settings.OIDC_AUTHORIZATION_HEADER_PREFIX
         self.oidc_urls = self.get_oidc_urls({})
 
-    def authenticate(self, request, **kwargs) -> AbstractBaseUser:
+    def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None, **kwargs) -> Optional[AbstractBaseUser]:
         """Authenticates users using the Authorization header and previous OIDC Id Token."""
         try:
             prefix, id_token = request.headers.get('Authorization', ' ').split(' ', 1)
@@ -202,7 +229,7 @@ class BearerAuthenticationBackend(ModelBackend, AuthenticationMixin, OIDCUrlsMix
             if BlacklistedToken.is_blacklisted(id_token):
                 raise SuspiciousOperation(f"token {id_token} is blacklisted")
             id_claims = self.validate_and_decode_id_token(id_token, nonce=None, jwks=self.oidc_urls.get(constants.SESSION_OP_JWKS, []))
-            user = self.get_or_create_user(request, id_claims, None)
+            user = self.get_or_create_user(request, id_claims, '')
             return user
         except Exception as e:
             warning(e.args[0])

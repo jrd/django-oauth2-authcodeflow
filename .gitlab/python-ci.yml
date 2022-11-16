@@ -1,0 +1,33 @@
+.python:
+  image:
+    name: python:3.7
+    entrypoint:
+      - "/bin/bash"
+      - "-c"
+      - |
+        set -e
+        pip install -U pip poetry
+        poetry config virtualenvs.in-project true
+        poetry config cache-dir $PIP_CACHE_DIR
+        useradd -m test
+        chown -R test: /builds
+        if [ -e $PIP_CACHE_DIR ]; then
+          chown -R test: $PIP_CACHE_DIR
+        else
+          mkdir -p $PIP_CACHE_DIR
+          chown test: $PIP_CACHE_DIR
+        fi
+        exec su test -c /bin/bash
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  cache:
+    key:
+      files:
+        - pyproject.toml
+        - poetry.lock
+    paths:
+      - .cache/pip
+      - .venv
+  before_script:
+    - |
+      poetry env use $PYTHON_VERSION
