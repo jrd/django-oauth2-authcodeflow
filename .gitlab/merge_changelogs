@@ -43,5 +43,4 @@ if [ -n "$(find "$changelog_dir" -type f -name "*.$changelog_ext" 2>/dev/null)" 
   ) > "$newchlog"
   mv "$newchlog" CHANGELOG.md
   git add CHANGELOG.md
-  git commit -m "version $next_ver"
 fi

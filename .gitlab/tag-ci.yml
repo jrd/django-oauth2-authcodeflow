@@ -30,8 +30,11 @@ include:
       fi
       (cat "$DEPLOY_KEY_TO_TAG" | tr -d "\r"; echo "") | ssh-add - >/dev/null
       make bump_version what=$RULE_UPDATE
-      make merge_changelogs tag
+      make merge_changelogs
       VER=$(make version)
-      git push origin refs/tags/v$VER
-      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then git push -o ci.skip origin HEAD:$CI_COMMIT_BRANCH; fi
+      git add -u
+      git commit -m "version $VER"
+      git tag -a -f -m "version $VER" "v$VER"
+      git push origin "refs/tags/v$VER"
+      if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then git push -o ci.skip origin "HEAD:$CI_COMMIT_BRANCH"; fi
       echo "v$VER tagged and pushed"

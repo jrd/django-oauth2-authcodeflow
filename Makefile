@@ -9,7 +9,6 @@
 	version \
 	bump_version \
 	merge_changelogs \
-	tag \
 	project \
 	build \
 	test_upload \
@@ -30,7 +29,6 @@ help:
 	@echo "  version: just show current version"
 	@echo "  bump_version: use the 'what' variable to define what to bump: major, minor or patch"
 	@echo "  merge_changelogs: merge $(changelog_dir)/*/*.$(changelog_ext) into CHANGELOG.md file"
-	@echo "  tag: create a tag from current version"
 	@echo "  project: create a fake project"
 	@echo "  build: create source and wheel packages"
 	@echo "  test_upload: build and upload packages to testpypi (always do this first)"
@@ -74,10 +72,6 @@ bump_version:
 
 merge_changelogs:
 	@./.gitlab/merge_changelogs
-
-tag:
-	@next_ver=$$(poetry version -s); \
-	git tag -a -f -m "version $$next_ver" "v$$next_ver"
 
 project:
 	@poetry run python -m django startproject project && \
