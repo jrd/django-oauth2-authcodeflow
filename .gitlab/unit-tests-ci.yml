@@ -4,8 +4,8 @@ include:
   extends:
     - .python
   stage: test
-  only:
-    - branches
+  rules:
+    - if: $CI_COMMIT_BRANCH
   script:
     - 'make install_all_deps'
     - 'make tests'

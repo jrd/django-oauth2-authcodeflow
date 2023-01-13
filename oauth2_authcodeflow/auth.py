@@ -3,6 +3,7 @@ from logging import (
     debug,
     warning,
 )
+from re import search
 from time import time
 from typing import (
     Dict,
@@ -137,8 +138,13 @@ class AuthenticationMixin:
 class AuthenticationBackend(ModelBackend, AuthenticationMixin):
     def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None, **kwargs) -> Optional[AbstractBaseUser]:
         """Authenticates users using OpenID Connect Authorization code flow."""
-        use_pkce: bool = kwargs.pop('use_pkce')
-        code: str = kwargs.pop('code')
+        for url_pattern in settings.OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS:
+            if search(url_pattern, request.path):
+                return None
+        use_pkce: bool = kwargs.pop('use_pkce', None)
+        code: str = kwargs.pop('code', None)
+        if use_pkce is None or code is None:
+            return None
         state: Optional[str] = kwargs.pop('state', None)
         nonce: Optional[str] = kwargs.pop('nonce', None)
         code_verifier: Optional[str] = kwargs.pop('code_verifier', None)

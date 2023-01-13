@@ -133,8 +133,9 @@ DEFAULTS: Dict[str, Tuple[Any, Any]] = {
     #   Authorization: Bearer id_token
     # This is only possible if oauth2_authcodeflow.auth.BearerAuthenticationBackend has been added to AUTHENTICATION_BACKENDS config list.
     'OIDC_AUTHORIZATION_HEADER_PREFIX': (str, 'Bearer'),
-    # The RefreshAccessTokenMiddleware and RefreshSessionMiddleware will use this list bypass auth checks.
-    # You should include at least any failure/error urls in it.
+    # The RefreshAccessTokenMiddleware and RefreshSessionMiddleware will use this list to bypass auth checks.
+    # Any url listed here will not be tried to be authenticated using Auth Code Flow.
+    # You should include at least any failure/error or admin urls in it.
     'OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS': (list, []),
     # The RefreshAccessTokenMiddleware and RefreshSessionMiddleware will use this list to answer JSON response in case of refresh failure.
     # Expected list of regexp URL patterns.

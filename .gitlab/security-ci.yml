@@ -1,7 +1,7 @@
 .security:
   stage: test
-  only:
-    - branches
+  rules:
+    - if: $CI_COMMIT_BRANCH
   image:
     name: aquasec/trivy
     entrypoint: [""]

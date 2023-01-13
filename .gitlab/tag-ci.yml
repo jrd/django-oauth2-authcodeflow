@@ -5,8 +5,8 @@ include:
     - .python
   stage: release
   when: manual
-  only:
-    - branches
+  rules:
+    - if: $CI_COMMIT_BRANCH
   before_script:
     - |
       mkdir -p ~/.ssh && chmod 700 ~/.ssh

@@ -153,6 +153,6 @@ Specific OIDC settings:
 | `OIDC_UNUSABLE_PASSWORD` | Scramble the password on each SSO connection/renewal.<br>If `False`, it will only scramble it when creating an account | `True` |
 | `OIDC_BLACKLIST_TOKEN_TIMEOUT_SECONDS` | 7 days by default | `7 * 86400` |
 | `OIDC_AUTHORIZATION_HEADER_PREFIX` | Only used when using authorization in header:<br>`Authorization: Bearer id_token`<br>This is only possible if `oauth2_authcodeflow.middleware.BearerAuthMiddleware` has been added to `MIDDLEWARE` setting list. | `'Bearer'` |
-| `OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS` | The `RefreshAccessTokenMiddleware` and `RefreshSessionMiddleware` will use this list to bypass auth checks.<br>You should include at least any failure/error urls in it. | `[]` |
+| `OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS` | The `RefreshAccessTokenMiddleware` and `RefreshSessionMiddleware` will use this list to bypass auth checks.<br>Any url listed here will not be tried to be authenticated using Auth Code Flow.<br>You should include at least any failure/error or admin urls in it. | `[]` |
 | `OIDC_MIDDLEWARE_API_URL_PATTERNS` | The `RefreshAccessTokenMiddleware` and `RefreshSessionMiddleware` will use this list to answer JSON response in case of refresh failure.<br>Expected list of regexp URL patterns. | `['^/api/']` |
 | `OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS` | 7 days by default | `7 * 86400` |
