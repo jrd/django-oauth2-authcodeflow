@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-oauth2-authcodeflow"
-version = "0.8.0"
+version = "0.8.1"
 description = "Authenticate with any OpenId Connect/Oauth2 provider through authorization code flow. PKCE is also supported."
 authors = ["Cyrille Pontvieux <cpontvieux@systra.com>"]
 maintainers = ["Cyrille Pontvieux <cyrille@enialis.net>"]
