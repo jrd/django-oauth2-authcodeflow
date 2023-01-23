@@ -1,0 +1,2 @@
+- `LoginRequiredMiddleware`
+- Documentation about `@login_required`

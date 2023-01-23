@@ -137,6 +137,8 @@ DEFAULTS: Dict[str, Tuple[Any, Any]] = {
     # Any url listed here will not be tried to be authenticated using Auth Code Flow.
     # You should include at least any failure/error or admin urls in it.
     'OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS': (list, []),
+    # Redirect to login page if not authenticated when using LoginRequiredMiddleware
+    'OIDC_MIDDLEWARE_LOGIN_REQUIRED_REDIRECT': (bool, True),
     # The RefreshAccessTokenMiddleware and RefreshSessionMiddleware will use this list to answer JSON response in case of refresh failure.
     # Expected list of regexp URL patterns.
     'OIDC_MIDDLEWARE_API_URL_PATTERNS': (list, ['^/api/']),

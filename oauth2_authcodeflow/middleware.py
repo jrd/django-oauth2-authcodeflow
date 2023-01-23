@@ -10,7 +10,10 @@ from time import (
 )
 from urllib.parse import urlencode
 
-from django.contrib.auth import BACKEND_SESSION_KEY
+from django.contrib.auth import (
+    BACKEND_SESSION_KEY,
+    authenticate,
+)
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ImproperlyConfigured
 from django.http import (
@@ -57,6 +60,7 @@ class Oauth2MiddlewareMixin(MiddlewareMixin):
     def is_oidc_enabled(self, request):
         auth_backend = None
         backend_session = request.session.get(BACKEND_SESSION_KEY)
+        debug(f"backend_session={backend_session}")
         if backend_session and request.user and request.user.is_authenticated:
             auth_backend = import_string(backend_session)
         return issubclass(auth_backend, AuthenticationBackend) if auth_backend else False
@@ -122,6 +126,52 @@ class Oauth2MiddlewareMixin(MiddlewareMixin):
                     settings.OIDC_REDIRECT_OK_FIELD_NAME: next_url,
                     settings.OIDC_REDIRECT_ERROR_FIELD_NAME: failure_url,
                 }))
+
+
+class LoginRequiredMiddleware(Oauth2MiddlewareMixin):
+    """
+    Force a user to be logged-in to access all pages not listed in OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS.
+    If OIDC_MIDDLEWARE_LOGIN_REQUIRED_REDIRECT is true (default), then redirect to login page if not authenticated.
+    """
+    def __init__(self, get_response):
+        super().__init__(get_response, 'id_token', self.check_login_required)
+
+    def is_login_required_for_url(self, request):
+        login_required_url = False
+        for url_pattern in self.exempt_urls:
+            if search(url_pattern, request.path):
+                break
+        else:
+            login_required_url = True
+        return login_required_url
+
+    def is_api_request(self, request):
+        if settings.OIDC_MIDDLEWARE_LOGIN_REQUIRED_REDIRECT:
+            if request.method == 'GET':
+                # force redirect on GET request even if it’s a API request
+                return False
+            else:
+                return super().is_api_request(request)
+        else:
+            return True
+
+    def check_login_required(self, request):
+        if request.user.is_authenticated:
+            debug("user is already authenticated")
+            return
+        if not self.is_login_required_for_url(request):
+            debug(f"{request.path} does not need authenticated user")
+            return
+        debug(f"{request.path} needs an authenticated user")
+        if constants.SESSION_ID_TOKEN not in request.session:
+            try:
+                user = authenticate(request)
+            except Exception as e:
+                raise MiddlewareException(str(e))
+            if not user:
+                raise MiddlewareException("id token is missing, user is not authenticated")
+        else:
+            debug("id token is present, authenticated user")
 
 
 class RefreshAccessTokenMiddleware(Oauth2MiddlewareMixin):

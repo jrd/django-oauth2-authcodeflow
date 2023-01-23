@@ -35,7 +35,7 @@ Setup
 
     You can change the path prefix to what you want
 
-- add `oauth2_authcodeflow.auth.AuthenticationBackend` ot the `AUTHENTICATION_BACKENDS` config.
+- add `oauth2_authcodeflow.auth.AuthenticationBackend` to the `AUTHENTICATION_BACKENDS` config.
 
     You can keep `django.contrib.auth.backends.ModelBackend` as a second-fallback auth mechanism.
 
@@ -88,16 +88,37 @@ Get your browser/frontend to go to the `oidc_total_logout` page name (`/oidc/tot
 - `next`: the url to redirect on success
 - `fail`: the url to redirect on failure, `error` query string may contain an error description
 
+Protect your urls
+-----------------
+
+At least three options are possible.
+
+1. Use default django way to [limit access to logged-in users](https://docs.djangoproject.com/en/4.1/topics/auth/default/#limiting-access-to-logged-in-users) by defining `LOGIN_URL` in your settings and and `login_required` decorators in your views.  
+  ```python
+  # settings.py
+  from django.urls import reverse_lazy
+  from django.utils.text import format_lazy
+  LOGIN_URL = format_lazy('{url}?fail=/', url=reverse_lazy(OIDC_URL_AUTHENTICATION_NAME))
+  # urls.py
+  from django.contrib.auth.decorators import login_required
+  path('restricted_url/', login_required(your_view)),
+  ```
+2. A slightly different version, by directly and only using the `login_required` from `oauth2_authcodeflow.utils`.
+3. Use the `LoginRequiredMiddleware` with `OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS` configuration.
+
 Optional middlewares
 --------------------
 
 You can add some middlewares to add some features:
 
+- `oauth2_authcodeflow.middleware.LoginRequiredMiddleware` to automaticaly force a login request to urls not in `OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS` if not authenticated.
 - `oauth2_authcodeflow.middleware.RefreshAccessTokenMiddleware` to automaticaly refresh the access token when it’s expired.
 - `oauth2_authcodeflow.middleware.RefreshSessionMiddleware` to automaticaly ask for a new id token when it’s considered expired.
 - `oauth2_authcodeflow.middleware.BearerAuthMiddleware` to authenticate the user using `Authorization` HTTP header (API, scripts, CLI usage).
 
-The first two will try the refresh and return a redirect to the same page (or the one configured as next in the login phase) if the refresh cannot happen.
+`LoginRequiredMiddleware` will refresh to the original page uppon user logged-in.
+
+`RefreshAccessTokenMiddleware` and `RefreshSessionMiddleware` will try the refresh and return a redirect to the same page (or the one configured as next in the login phase) if the refresh cannot happen.
 
 Use them to silently refresh your access/id tokens.
 
@@ -154,5 +175,6 @@ Specific OIDC settings:
 | `OIDC_BLACKLIST_TOKEN_TIMEOUT_SECONDS` | 7 days by default | `7 * 86400` |
 | `OIDC_AUTHORIZATION_HEADER_PREFIX` | Only used when using authorization in header:<br>`Authorization: Bearer id_token`<br>This is only possible if `oauth2_authcodeflow.middleware.BearerAuthMiddleware` has been added to `MIDDLEWARE` setting list. | `'Bearer'` |
 | `OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS` | The `RefreshAccessTokenMiddleware` and `RefreshSessionMiddleware` will use this list to bypass auth checks.<br>Any url listed here will not be tried to be authenticated using Auth Code Flow.<br>You should include at least any failure/error or admin urls in it. | `[]` |
+| `OIDC_MIDDLEWARE_LOGIN_REQUIRED_REDIRECT` | Redirect to login page if not authenticated when using `LoginRequiredMiddleware`. | `True` |
 | `OIDC_MIDDLEWARE_API_URL_PATTERNS` | The `RefreshAccessTokenMiddleware` and `RefreshSessionMiddleware` will use this list to answer JSON response in case of refresh failure.<br>Expected list of regexp URL patterns. | `['^/api/']` |
 | `OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS` | 7 days by default | `7 * 86400` |

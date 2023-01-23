@@ -1,15 +1,24 @@
 from typing import (
     Any,
+    Callable,
     Dict,
+    TypeVar,
 )
+from urllib.parse import urlencode
 
+from django.contrib.auth.decorators import login_required as orig_login_required
 from django.core.exceptions import ImproperlyConfigured
+from django.http.response import HttpResponseBase
+from django.urls import reverse_lazy
+from django.utils.text import format_lazy
 from requests import get as request_get
 
 from .conf import (
     constants,
     settings,
 )
+
+_VIEW = TypeVar("_VIEW", bound=Callable[..., HttpResponseBase])
 
 
 class OIDCUrlsMixin:
@@ -61,3 +70,14 @@ class OIDCUrlsMixin:
                 jwks = []
             session[constants.SESSION_OP_JWKS] = {key['kid']: key for key in jwks if key['kty'] == 'RSA' and key['use'] == 'sig'}
         return session
+
+
+def login_required(function: _VIEW, fail: str = '/') -> _VIEW:
+    return orig_login_required(
+        function,
+        redirect_field_name=settings.OIDC_REDIRECT_OK_FIELD_NAME,
+        login_url=format_lazy(
+            '{url}?' + urlencode({settings.OIDC_REDIRECT_ERROR_FIELD_NAME: '/'}),
+            url=reverse_lazy(constants.OIDC_URL_AUTHENTICATION_NAME),
+        ),
+    )
