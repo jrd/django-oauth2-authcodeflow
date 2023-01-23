@@ -9,3 +9,13 @@ include:
   script:
     - 'make install_all_deps'
     - 'make tests'
+  artifacts:
+    when: always
+    paths:
+      - reports/**
+    reports:
+      junit: reports/report.xunit
+      coverage_report:
+        coverage_format: cobertura
+        path: reports/coverage.xml
+  coverage: /^TOTAL .+? ([\d.]+%)$/

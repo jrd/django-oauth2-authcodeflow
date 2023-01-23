@@ -26,4 +26,4 @@ class Command(BaseCommand):
             self.stdout.write(f"redirect_url: {redirect_url}")
             self.stdout.write(f"logout_url: {logout_url}")
         except NoReverseMatch as e:
-            raise CommandError(e)
+            raise CommandError(str(e))

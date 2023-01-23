@@ -1,19 +1,21 @@
 from base64 import urlsafe_b64encode
 from hashlib import sha1
+from types import FunctionType
 from typing import (
     Any,
     Callable,
     Dict,
+    Optional,
+    Set,
     Tuple,
 )
 
 from django.conf import settings as dj_settings
 from django.core.exceptions import ImproperlyConfigured
+from django.core.signals import setting_changed
 from django.utils.module_loading import import_string
 
 from . import constants
-
-assert constants
 
 
 def import_string_as_func(value: str, attr: str) -> Callable:
@@ -29,8 +31,6 @@ def get_default_django_username(claims: Dict) -> str:
         sha1(claims.get('email', '').encode('utf8')).digest()
     ).decode('ascii').rstrip('=')
 
-
-func = type(lambda: 0)
 
 DEFAULTS: Dict[str, Tuple[Any, Any]] = {
     'OIDC_VIEW_AUTHENTICATE': (type, f'{__package__}.views.AuthenticateView'),
@@ -114,18 +114,18 @@ DEFAULTS: Dict[str, Tuple[Any, Any]] = {
     # Function or dotted path to a function that compute the django username based on claims.
     # The username should be unique for this app.
     # The default is to use a base64 encode of the email hash (sha1).
-    'OIDC_DJANGO_USERNAME_FUNC': (func, get_default_django_username),
+    'OIDC_DJANGO_USERNAME_FUNC': (FunctionType, get_default_django_username),
     # Default, by value None, is the value of `OIDC_OP_EXPECTED_EMAIL_CLAIM`
     # You can also provide a lambda that takes all the claims as argument and return an email
-    'OIDC_EMAIL_CLAIM': ((str, func), None),
+    'OIDC_EMAIL_CLAIM': ((str, FunctionType), None),
     # You can also provide a lambda that takes all the claims as argument and return a firstname
-    'OIDC_FIRSTNAME_CLAIM': ((str, func), 'given_name'),
+    'OIDC_FIRSTNAME_CLAIM': ((str, FunctionType), 'given_name'),
     # You can also provide a lambda that takes all the claims as argument and return a lastname
-    'OIDC_LASTNAME_CLAIM': ((str, func), 'family_name'),
+    'OIDC_LASTNAME_CLAIM': ((str, FunctionType), 'family_name'),
     # Callable (that takes the user, the claims and optionaly the request and access_token as arguments)
     # to extend user with other potential additional information available in the claims or from another request
     # You can also specify a dotted path to a callable
-    'OIDC_EXTEND_USER': (func, None),
+    'OIDC_EXTEND_USER': (FunctionType, None),
     # Scramble the password on each SSO connection/renewal. If False, it will only scramble it when creating an account.
     'OIDC_UNUSABLE_PASSWORD': (bool, True),
     'OIDC_BLACKLIST_TOKEN_TIMEOUT_SECONDS': (int, 7 * 86400),  # 7 days
@@ -150,10 +150,14 @@ class Settings:
     """
     A settings object, that allows settings to be accessed as properties.
     """
-    def __init__(self, defaults=None):
-        self.defaults = defaults or DEFAULTS
+    defaults: Dict[str, Tuple[Any, Any]]
 
-    def __getattr__(self, attr):
+    def __init__(self, defaults: Optional[Dict[str, Tuple[Any, Any]]] = None) -> None:
+        self.defaults = defaults or DEFAULTS
+        self._cache: Set[str] = set()
+        setting_changed.connect(self.reload)
+
+    def __getattr__(self, attr: str) -> Any:
         atype, def_val = self.defaults.get(attr, (None, None))
         val = getattr(dj_settings, attr, def_val)
         if atype is None:  # other setting
@@ -161,17 +165,38 @@ class Settings:
         elif not isinstance(atype, tuple):
             atype = atype,
         val = self._check_type_and_get_value(attr, val, atype)
-        setattr(self, attr, val)  # cache the result
+        # cache the result
+        self._cache.add(attr)
+        setattr(self, attr, val)
         return val
 
     def _check_type_and_get_value(self, attr: str, val: Any, atype: tuple) -> Any:
-        if (func in atype or type in atype) and isinstance(val, str) and '.' in val:
+        if (FunctionType in atype or type in atype) and isinstance(val, str) and '.' in val:
             val = import_string_as_func(val, attr)  # dotted strings to function
         if val is ImproperlyConfigured:
             raise ImproperlyConfigured(f"Setting '{attr}' not found, it should be defined")
         if val is not None and not isinstance(val, atype):
-            raise ImproperlyConfigured(f"Invalid setting: '{attr}' should be of type {atype} and is of type {type(val)}")
+            raise ImproperlyConfigured(f"Invalid setting: '{attr}' should be of type {', '.join(map(str, atype))} and is of type {type(val)}")
         return val
+
+    def reload(self, *args, **kwargs) -> None:
+        attr = str(kwargs.get('setting'))
+        # hasattr cannot be used because it relies on getattr and __getattr__, so use the _cache
+        if attr in self._cache:
+            self._cache.remove(attr)
+        try:
+            delattr(self, attr)
+        except AttributeError:
+            pass
 
 
 settings = Settings()
+
+
+__all__ = [
+    'Settings',
+    'constants',
+    'get_default_django_username',
+    'import_string_as_func',
+    'settings',
+]

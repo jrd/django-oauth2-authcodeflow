@@ -1,0 +1,1 @@
+- Respect the optional `fail` parameter of `@login_required` decorator.

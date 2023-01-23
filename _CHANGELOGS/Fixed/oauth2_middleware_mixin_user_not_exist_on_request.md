@@ -1,0 +1,1 @@
+- If user does not exist on request, should not crash in `Oauth2MiddlewareMixin.is_oidc_enabled`.

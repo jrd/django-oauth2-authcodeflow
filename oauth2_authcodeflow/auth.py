@@ -1,13 +1,15 @@
+from datetime import datetime
 from inspect import signature
 from logging import (
     debug,
     warning,
 )
 from re import search
-from time import time
 from typing import (
     Dict,
     Optional,
+    Type,
+    cast,
 )
 
 from django.contrib.auth import get_user_model
@@ -23,6 +25,7 @@ from jose import (
     JWTError,
     jwt,
 )
+from pytz import utc
 from requests import get as request_get
 from requests import post as request_post
 
@@ -35,8 +38,7 @@ from .utils import OIDCUrlsMixin
 
 
 class AuthenticationMixin:
-    def __init__(self, *args, **kwargs):
-        self.UserModel = get_user_model()
+    UserModel: Type[AbstractUser] = cast(Type[AbstractUser], get_user_model())
 
     def validate_and_decode_id_token(self, id_token: str, nonce: Optional[str], jwks: Dict) -> Dict:
         header = jwt.get_unverified_header(id_token)
@@ -56,14 +58,10 @@ class AuthenticationMixin:
             key = settings.OIDC_RP_CLIENT_SECRET
         else:
             raise NotImplementedError(f"Algo {algo} cannot be handled by this authentication backend")
-        if isinstance(key, dict):
-            secret = key
-        else:  # RSA public key (bytes)
-            secret = key
         try:
             claims = jwt.decode(
                 id_token,
-                secret,
+                key,
                 algorithms=settings.OIDC_RP_SIGN_ALGOS_ALLOWED,
                 audience=settings.OIDC_RP_CLIENT_ID,
                 options={
@@ -80,7 +78,7 @@ class AuthenticationMixin:
             raise SuspiciousOperation("JWT Nonce verification failed")
         return claims
 
-    def validate_claims(self, claims):
+    def validate_claims(self, claims: Dict) -> None:
         expected_list = [settings.OIDC_OP_EXPECTED_EMAIL_CLAIM] + list(settings.OIDC_OP_EXPECTED_CLAIMS)
         debug(f"Validate claims={claims} against expected {expected_list}")
         for expected in expected_list:
@@ -163,17 +161,10 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             return None
         try:
             if use_pkce:
-                if any((
-                    not code,
-                    not code_verifier,
-                )):
+                if not code or not code_verifier:
                     raise SuspiciousOperation('code and code_verifier values are required')
             else:
-                if any((
-                    not code,
-                    not state,
-                    not nonce,
-                )):
+                if not code or not state or not nonce:
                     raise SuspiciousOperation('code, state and nonce values are required')
             params = {
                 'grant_type': 'authorization_code',
@@ -190,25 +181,26 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             result = resp.json()
             id_token = result['id_token']
             access_token = result['access_token']
-            expires_in = result.get('expires_in')  # in secs, could be missing
+            access_expires_in = result.get('expires_in')  # in secs, could be missing
             refresh_token = result.get('refresh_token') if 'offline_access' in settings.OIDC_RP_SCOPES else None
-            id_claims = self.validate_and_decode_id_token(id_token, nonce, request.session[constants.SESSION_OP_JWKS])
+            id_claims = self.validate_and_decode_id_token(id_token, nonce, request.session.get(constants.SESSION_OP_JWKS, {}))
             self.validate_claims(id_claims)
-            now = time()
-            if expires_in:
-                expires_at = now + expires_in
+            now_ts = int(datetime.now(tz=utc).timestamp())
+            session_expires_at = now_ts + settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS
+            if access_expires_in:
+                access_expires_at = now_ts + access_expires_in
             else:
-                expires_at = id_claims.get('exp', now + settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS)
+                access_expires_at = id_claims.get('exp', session_expires_at)
             request.session[constants.SESSION_ID_TOKEN] = id_token
             request.session[constants.SESSION_ACCESS_TOKEN] = access_token
-            request.session[constants.SESSION_ACCESS_EXPIRES_AT] = expires_at
-            request.session[constants.SESSION_EXPIRES_AT] = now + settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS
+            request.session[constants.SESSION_ACCESS_EXPIRES_AT] = access_expires_at
+            request.session[constants.SESSION_EXPIRES_AT] = session_expires_at
             if refresh_token:
                 request.session[constants.SESSION_REFRESH_TOKEN] = refresh_token
             user = self.get_or_create_user(request, id_claims, access_token)
             return user
         except Exception as e:
-            warning(e, str(e))
+            warning(str(e), exc_info=True)
             return None
         finally:
             # be sure the session is in sync
@@ -216,17 +208,15 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
 
 
 class BearerAuthenticationBackend(ModelBackend, AuthenticationMixin, OIDCUrlsMixin):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.authorization_prefix = settings.OIDC_AUTHORIZATION_HEADER_PREFIX
         self.oidc_urls = self.get_oidc_urls({})
 
     def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None, **kwargs) -> Optional[AbstractBaseUser]:
         """Authenticates users using the Authorization header and previous OIDC Id Token."""
-        try:
-            prefix, id_token = request.headers.get('Authorization', ' ').split(' ', 1)
-        except ValueError:
-            prefix = id_token = ''
+        auth_header = request.headers.get('Authorization', '')
+        prefix, id_token = auth_header.split(' ', 1) if ' ' in auth_header else ('', '')
         if not prefix or not id_token:
             return None
         try:
@@ -234,9 +224,9 @@ class BearerAuthenticationBackend(ModelBackend, AuthenticationMixin, OIDCUrlsMix
                 raise SuspiciousOperation(f"Authorization should start with a {self.authorization_prefix} prefix")
             if BlacklistedToken.is_blacklisted(id_token):
                 raise SuspiciousOperation(f"token {id_token} is blacklisted")
-            id_claims = self.validate_and_decode_id_token(id_token, nonce=None, jwks=self.oidc_urls.get(constants.SESSION_OP_JWKS, []))
+            id_claims = self.validate_and_decode_id_token(id_token, nonce=None, jwks=self.oidc_urls.get(constants.SESSION_OP_JWKS, {}))
             user = self.get_or_create_user(request, id_claims, '')
             return user
         except Exception as e:
-            warning(e.args[0])
+            warning(str(e), exc_info=True)
             return None

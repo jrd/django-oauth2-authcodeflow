@@ -77,7 +77,7 @@ def login_required(function: _VIEW, fail: str = '/') -> _VIEW:
         function,
         redirect_field_name=settings.OIDC_REDIRECT_OK_FIELD_NAME,
         login_url=format_lazy(
-            '{url}?' + urlencode({settings.OIDC_REDIRECT_ERROR_FIELD_NAME: '/'}),
+            '{url}?' + urlencode({settings.OIDC_REDIRECT_ERROR_FIELD_NAME: fail}),
             url=reverse_lazy(constants.OIDC_URL_AUTHENTICATION_NAME),
         ),
     )
