@@ -2,5 +2,6 @@ dist/
 project/
 __pycache__/
 reports/
+.coverage
 .venv/
 .cache/

@@ -22,8 +22,6 @@ type_checker:
   allow_failure: true
 unit_tests:
   extends: .unit_tests
-  # the code is not ready yet
-  allow_failure: true
 .tag_base:
   extends: .tag
   needs:

@@ -3,8 +3,13 @@ from datetime import (
     timedelta,
 )
 from logging import warning
+from typing import (
+    Optional,
+    cast,
+)
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.utils import DatabaseError
 from django.utils.functional import cached_property
@@ -30,11 +35,14 @@ class BlacklistedToken(models.Model):
         ]
 
     @classmethod
-    def blacklist(cls, token: str):
+    def blacklist(cls, token: str) -> Optional['BlacklistedToken']:
         claims = jwt.get_unverified_claims(token)
         username = settings.OIDC_DJANGO_USERNAME_FUNC(claims)
         now = datetime.now(tz=utc)
-        expires_at = datetime.fromtimestamp(claims['exp'], tz=utc) if 'exp' in claims else now + timedelta(settings.OIDC_BLACKLIST_TOKEN_TIMEOUT_SECONDS)
+        if 'exp' in claims:
+            expires_at = datetime.fromtimestamp(claims['exp'], tz=utc)
+        else:
+            expires_at = now + timedelta(seconds=settings.OIDC_BLACKLIST_TOKEN_TIMEOUT_SECONDS)
         try:
             return cls.objects.create(username=username, token=token, expires_at=expires_at, blacklisted_at=now)
         except DatabaseError as e:
@@ -42,24 +50,24 @@ class BlacklistedToken(models.Model):
             return None
 
     @classmethod
-    def is_blacklisted(cls, token: str):
+    def is_blacklisted(cls, token: str) -> bool:
         claims = jwt.get_unverified_claims(token)
         username = settings.OIDC_DJANGO_USERNAME_FUNC(claims)
         return cls.objects.filter(username=username, token=token).count() > 0
 
     @classmethod
-    def purge(cls):
+    def purge(cls) -> int:
         now = datetime.now(tz=utc)
         nb, _ = cls.objects.filter(expires_at__lte=now).delete()
         return nb
 
     @cached_property
-    def user(self):
+    def user(self) -> Optional[AbstractUser]:
         User = get_user_model()
         try:
-            return User.objects.get(username=self.username)
+            return cast(AbstractUser, User.objects.get(username=self.username))
         except User.DoesNotExist:
             return None
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Blacklisted token for {self.username}, expire at {str(self.expires_at)}"

@@ -1,0 +1,1 @@
+- Fix `_clear_cache` method in `CacheBaseView`: was not clearing the session correctly.
