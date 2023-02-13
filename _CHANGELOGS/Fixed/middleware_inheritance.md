@@ -1,1 +1,0 @@
-- Middlewares should not inherit depraceted `MiddlewareMixin`.

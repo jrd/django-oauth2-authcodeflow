@@ -1,1 +1,0 @@
-- Configuration cannot be updated when using unit tests. This is now fixed. No impact on lib usage.

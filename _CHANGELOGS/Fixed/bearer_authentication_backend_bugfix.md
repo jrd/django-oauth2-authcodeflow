@@ -1,1 +1,0 @@
-- Default value for `jwks` in `BearerAuthenticationBackend` should be dict, not a list.

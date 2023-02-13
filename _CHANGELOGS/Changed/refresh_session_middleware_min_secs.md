@@ -1,1 +1,0 @@
-- Allow to override `MIN_SECONDS` in `RefreshSessionMiddleware`.

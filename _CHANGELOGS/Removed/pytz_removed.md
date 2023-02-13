@@ -1,1 +1,0 @@
-- `pytz` removed. `datetime.timezone.utc` is the only thing required.

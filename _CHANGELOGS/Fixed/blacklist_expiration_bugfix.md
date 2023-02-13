@@ -1,1 +1,0 @@
-- Fix blacklist expiration for token where seconds where used as hours

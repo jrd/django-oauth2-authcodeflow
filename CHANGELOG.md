@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.9.0
+### Fixed
+- Default value for `jwks` in `BearerAuthenticationBackend` should be dict, not a list.
+- Fix blacklist expiration for token where seconds where used as hours
+- Fix `_clear_cache` method in `CacheBaseView`: was not clearing the session correctly.
+- Configuration cannot be updated when using unit tests. This is now fixed. No impact on lib usage.
+- Respect the optional `fail` parameter of `@login_required` decorator.
+- Middlewares should not inherit depraceted `MiddlewareMixin`.
+- If user does not exist on request, should not crash in `Oauth2MiddlewareMixin.is_oidc_enabled`.
+### Changed
+- Allow to override `MIN_SECONDS` in `RefreshSessionMiddleware`.
+- Use UTC time in `RefreshAccessTokenMiddleware`, `RefreshSessionMiddleware`.
+### Added
+- `LoginRequiredMiddleware`
+- Documentation about `@login_required`
+### Removed
+- `pytz` removed. `datetime.timezone.utc` is the only thing required.
+
 ## 0.8.1
 ### Fixed
 - urls listed in `OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS` will not be tried on authentication in `auth.py`
