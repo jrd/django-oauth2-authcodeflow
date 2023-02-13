@@ -1,6 +1,7 @@
 from datetime import (
     datetime,
     timedelta,
+    timezone,
 )
 from logging import warning
 from typing import (
@@ -14,7 +15,6 @@ from django.db import models
 from django.db.utils import DatabaseError
 from django.utils.functional import cached_property
 from jose import jwt
-from pytz import utc
 
 from .conf import settings
 
@@ -38,9 +38,9 @@ class BlacklistedToken(models.Model):
     def blacklist(cls, token: str) -> Optional['BlacklistedToken']:
         claims = jwt.get_unverified_claims(token)
         username = settings.OIDC_DJANGO_USERNAME_FUNC(claims)
-        now = datetime.now(tz=utc)
+        now = datetime.now(tz=timezone.utc)
         if 'exp' in claims:
-            expires_at = datetime.fromtimestamp(claims['exp'], tz=utc)
+            expires_at = datetime.fromtimestamp(claims['exp'], tz=timezone.utc)
         else:
             expires_at = now + timedelta(seconds=settings.OIDC_BLACKLIST_TOKEN_TIMEOUT_SECONDS)
         try:
@@ -57,7 +57,7 @@ class BlacklistedToken(models.Model):
 
     @classmethod
     def purge(cls) -> int:
-        now = datetime.now(tz=utc)
+        now = datetime.now(tz=timezone.utc)
         nb, _ = cls.objects.filter(expires_at__lte=now).delete()
         return nb
 

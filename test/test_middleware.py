@@ -1,6 +1,7 @@
 from datetime import (
     datetime,
     timedelta,
+    timezone,
 )
 from json import dumps
 from re import escape
@@ -16,7 +17,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 from freezegun import freeze_time
-from pytz import utc
 
 from oauth2_authcodeflow import constants
 from oauth2_authcodeflow.middleware import (
@@ -31,7 +31,7 @@ from oauth2_authcodeflow.middleware import (
 
 @pytest.fixture
 def frozen_datetime():
-    fake_utcnow = datetime(2023, 1, 1, tzinfo=utc)
+    fake_utcnow = datetime(2023, 1, 1, tzinfo=timezone.utc)
     with freeze_time(fake_utcnow.replace(tzinfo=None)) as frozen_datetime:
         frozen_datetime.fake_utcnow = fake_utcnow
         yield frozen_datetime

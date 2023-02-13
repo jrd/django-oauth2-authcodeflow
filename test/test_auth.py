@@ -2,6 +2,7 @@ from base64 import b64encode
 from datetime import (
     datetime,
     timedelta,
+    timezone,
 )
 from json import dumps
 from re import escape
@@ -16,7 +17,6 @@ from django.core.exceptions import SuspiciousOperation
 from freezegun import freeze_time
 from jose import jwt
 from jose.utils import long_to_base64
-from pytz import utc
 
 from oauth2_authcodeflow import constants
 from oauth2_authcodeflow.auth import (
@@ -29,7 +29,7 @@ from oauth2_authcodeflow.utils import OIDCUrlsMixin
 
 @pytest.fixture
 def frozen_datetime():
-    fake_utcnow = datetime(2023, 1, 1, tzinfo=utc)
+    fake_utcnow = datetime(2023, 1, 1, tzinfo=timezone.utc)
     with freeze_time(fake_utcnow.replace(tzinfo=None)) as frozen_datetime:
         frozen_datetime.fake_utcnow = fake_utcnow
         yield frozen_datetime

@@ -1,4 +1,7 @@
-from datetime import datetime
+from datetime import (
+    datetime,
+    timezone,
+)
 from inspect import signature
 from logging import (
     debug,
@@ -25,7 +28,6 @@ from jose import (
     JWTError,
     jwt,
 )
-from pytz import utc
 from requests import get as request_get
 from requests import post as request_post
 
@@ -185,7 +187,7 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             refresh_token = result.get('refresh_token') if 'offline_access' in settings.OIDC_RP_SCOPES else None
             id_claims = self.validate_and_decode_id_token(id_token, nonce, request.session.get(constants.SESSION_OP_JWKS, {}))
             self.validate_claims(id_claims)
-            now_ts = int(datetime.now(tz=utc).timestamp())
+            now_ts = int(datetime.now(tz=timezone.utc).timestamp())
             session_expires_at = now_ts + settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS
             if access_expires_in:
                 access_expires_at = now_ts + access_expires_in

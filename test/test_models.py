@@ -1,19 +1,19 @@
 from datetime import (
     datetime,
     timedelta,
+    timezone,
 )
 
 import pytest
 from freezegun import freeze_time
 from jose import jwt
-from pytz import utc
 
 from oauth2_authcodeflow.models import BlacklistedToken
 
 
 @pytest.fixture
 def frozen_datetime():
-    fake_now = datetime(2023, 1, 1, tzinfo=utc)
+    fake_now = datetime(2023, 1, 1, tzinfo=timezone.utc)
     with freeze_time(fake_now) as frozen_datetime:
         yield frozen_datetime
 
@@ -39,8 +39,8 @@ def test_blacklist_with_exp(db, frozen_datetime, settings_email_as_username):
     assert bl_token.id
     assert bl_token.username == 'my-email@example.com'
     assert bl_token.token == token
-    assert bl_token.expires_at == exp_date.replace(tzinfo=utc)
-    assert bl_token.blacklisted_at == frozen_datetime().replace(tzinfo=utc)
+    assert bl_token.expires_at == exp_date.replace(tzinfo=timezone.utc)
+    assert bl_token.blacklisted_at == frozen_datetime().replace(tzinfo=timezone.utc)
     assert BlacklistedToken.blacklist(token) is None
 
 
@@ -51,8 +51,8 @@ def test_blacklist_without_exp(db, frozen_datetime, settings_email_as_username):
     assert bl_token.id
     assert bl_token.username == 'my-email@example.com'
     assert bl_token.token == token
-    assert bl_token.expires_at == exp_date.replace(tzinfo=utc)
-    assert bl_token.blacklisted_at == frozen_datetime().replace(tzinfo=utc)
+    assert bl_token.expires_at == exp_date.replace(tzinfo=timezone.utc)
+    assert bl_token.blacklisted_at == frozen_datetime().replace(tzinfo=timezone.utc)
 
 
 def test_is_blacklisted(db, frozen_datetime, settings_email_as_username):
