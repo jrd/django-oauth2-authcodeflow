@@ -1,7 +1,4 @@
-from logging import (
-    debug,
-    error,
-)
+from logging import getLogger
 from re import search
 from time import (
     gmtime,
@@ -42,6 +39,8 @@ from .conf import (
 )
 from .models import BlacklistedToken
 
+logger = getLogger(__name__)
+
 
 class MiddlewareException(Exception):
     def __str__(self):
@@ -76,7 +75,7 @@ class Oauth2MiddlewareMixin:
                 constants.OIDC_URL_LOGOUT_BY_OP_NAME,
             )
         ) + tuple(str(p) for p in settings.OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS)
-        debug(f"self.exempt_urls={self.exempt_urls}")
+        logger.debug(f"self.exempt_urls={self.exempt_urls}")
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
         response = self.process_request(request)
@@ -85,7 +84,7 @@ class Oauth2MiddlewareMixin:
     def is_oidc_enabled(self, request: HttpRequest) -> bool:
         auth_backend = None
         backend_session = request.session.get(BACKEND_SESSION_KEY)
-        debug(f"backend_session={backend_session}")
+        logger.debug(f"backend_session={backend_session}")
         if backend_session and hasattr(request, 'user') and request.user.is_authenticated:
             auth_backend = import_string(backend_session)
         return issubclass(auth_backend, AuthenticationBackend) if auth_backend else False
@@ -98,7 +97,7 @@ class Oauth2MiddlewareMixin:
         """
         # Do not attempt to refresh the session if the OIDC backend is not used
         is_oidc_enabled = self.is_oidc_enabled(request)
-        debug(f"is_oidc_enabled={is_oidc_enabled}, request.path={request.path}, self.exempt_urls={self.exempt_urls}")
+        logger.debug(f"is_oidc_enabled={is_oidc_enabled}, request.path={request.path}, self.exempt_urls={self.exempt_urls}")
         if is_oidc_enabled:
             for url_pattern in self.exempt_urls:
                 if search(url_pattern, request.path):
@@ -108,11 +107,11 @@ class Oauth2MiddlewareMixin:
             return False
 
     def check_blacklisted(self, request: HttpRequest) -> None:
-        debug(f"self={self}, request.session.session_key={request.session.session_key}, request.session.keys()={request.session.keys()}")
+        logger.debug(f"self={self}, request.session.session_key={request.session.session_key}, request.session.keys()={request.session.keys()}")
         if constants.SESSION_ID_TOKEN in request.session:
             id_token = request.session[constants.SESSION_ID_TOKEN]
             if BlacklistedToken.is_blacklisted(id_token):
-                debug(f"token {id_token} is blacklisted")
+                logger.debug(f"token {id_token} is blacklisted")
                 raise MiddlewareException(f"token {id_token} is blacklisted")
 
     def get_next_url(self, request: HttpRequest) -> str:
@@ -199,12 +198,12 @@ class LoginRequiredMiddleware(Oauth2MiddlewareMixin):
 
     def check_login_required(self, request: HttpRequest) -> None:
         if hasattr(request, 'user') and request.user.is_authenticated:
-            debug("user is already authenticated")
+            logger.debug("user is already authenticated")
             return
         if not self.is_login_required_for_url(request):
-            debug(f"{request.path} does not need authenticated user")
+            logger.debug(f"{request.path} does not need authenticated user")
             return
-        debug(f"{request.path} needs an authenticated user")
+        logger.debug(f"{request.path} needs an authenticated user")
         if constants.SESSION_ID_TOKEN not in request.session:
             try:
                 user = authenticate(request)
@@ -213,7 +212,7 @@ class LoginRequiredMiddleware(Oauth2MiddlewareMixin):
             if not user:
                 raise MiddlewareException("id token is missing, user is not authenticated")
         else:
-            debug("id token is present, authenticated user")
+            logger.debug("id token is present, authenticated user")
 
 
 class RefreshAccessTokenMiddleware(Oauth2MiddlewareMixin):
@@ -227,9 +226,9 @@ class RefreshAccessTokenMiddleware(Oauth2MiddlewareMixin):
 
     def check_access_token(self, request: HttpRequest) -> None:
         if not self.is_refreshable_url(request):
-            debug(f"{request.path} is not refreshable")
+            logger.debug(f"{request.path} is not refreshable")
             return
-        debug(f"{request.path} is refreshable")
+        logger.debug(f"{request.path} is refreshable")
         if constants.SESSION_REFRESH_TOKEN not in request.session:
             return
         utc_expiration = request.session[constants.SESSION_ACCESS_EXPIRES_AT]
@@ -237,13 +236,13 @@ class RefreshAccessTokenMiddleware(Oauth2MiddlewareMixin):
         utc_now = mktime(utc_now_struct)
         if utc_expiration > utc_now:
             # The id_token is still valid, so we don't have to do anything.
-            debug(
+            logger.debug(
                 'access token is still valid (%s > %s)',
                 strftime('%d/%m/%Y, %H:%M:%S', gmtime(utc_expiration)),
                 strftime('%d/%m/%Y, %H:%M:%S', utc_now_struct),
             )
             return
-        debug('access token has expired')
+        logger.debug('access token has expired')
         # The access_token has expired, so we have to refresh silently.
         # Build the parameters.
         params = {
@@ -254,7 +253,7 @@ class RefreshAccessTokenMiddleware(Oauth2MiddlewareMixin):
         }
         resp = request_post(request.session[constants.SESSION_OP_TOKEN_URL], data=params)
         if not resp:
-            error(resp.text)
+            logger.error(resp.text)
             raise MiddlewareException(resp.text)
         result = resp.json()
         access_token = result['access_token']
@@ -287,19 +286,19 @@ class RefreshSessionMiddleware(Oauth2MiddlewareMixin):
 
     def check_session(self, request: HttpRequest) -> None:
         if not self.is_refreshable_url(request):
-            debug(f"{request.path} is not refreshable")
+            logger.debug(f"{request.path} is not refreshable")
             return
-        debug(f"{request.path} is refreshable")
+        logger.debug(f"{request.path} is refreshable")
         utc_expiration = request.session.get(constants.SESSION_EXPIRES_AT)
         if not utc_expiration:
             msg = f"No {constants.SESSION_EXPIRES_AT} parameter in the backend session"
-            debug(msg)
+            logger.debug(msg)
             raise MiddlewareException(msg)
         utc_now_struct = gmtime()
         utc_now = mktime(utc_now_struct)
         if utc_expiration > utc_now:
             # The session is still valid, so we don't have to do anything.
-            debug(
+            logger.debug(
                 'session is still valid (%s > %s)',
                 strftime('%d/%m/%Y, %H:%M:%S', gmtime(utc_expiration)),
                 strftime('%d/%m/%Y, %H:%M:%S', utc_now_struct),
@@ -309,7 +308,7 @@ class RefreshSessionMiddleware(Oauth2MiddlewareMixin):
         # Blacklist the current id token
         BlacklistedToken.blacklist(request.session[constants.SESSION_ID_TOKEN])
         msg = "Session has expired"
-        debug(msg)
+        logger.debug(msg)
         raise MiddlewareException(msg)
 
 

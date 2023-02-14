@@ -1,0 +1,1 @@
+- Each log (debug, warning, error) is now correctly bound to the module name.

@@ -3,10 +3,7 @@ from datetime import (
     timezone,
 )
 from inspect import signature
-from logging import (
-    debug,
-    warning,
-)
+from logging import getLogger
 from re import search
 from typing import (
     Dict,
@@ -37,6 +34,8 @@ from .conf import (
 )
 from .models import BlacklistedToken
 from .utils import OIDCUrlsMixin
+
+logger = getLogger(__name__)
 
 
 class AuthenticationMixin:
@@ -82,7 +81,7 @@ class AuthenticationMixin:
 
     def validate_claims(self, claims: Dict) -> None:
         expected_list = [settings.OIDC_OP_EXPECTED_EMAIL_CLAIM] + list(settings.OIDC_OP_EXPECTED_CLAIMS)
-        debug(f"Validate claims={claims} against expected {expected_list}")
+        logger.debug(f"Validate claims={claims} against expected {expected_list}")
         for expected in expected_list:
             if expected not in claims:
                 raise SuspiciousOperation(f"'{expected}' claim was expected")
@@ -202,7 +201,7 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             user = self.get_or_create_user(request, id_claims, access_token)
             return user
         except Exception as e:
-            warning(str(e), exc_info=True)
+            logger.warning(str(e), exc_info=True)
             return None
         finally:
             # be sure the session is in sync
@@ -230,5 +229,5 @@ class BearerAuthenticationBackend(ModelBackend, AuthenticationMixin, OIDCUrlsMix
             user = self.get_or_create_user(request, id_claims, '')
             return user
         except Exception as e:
-            warning(str(e), exc_info=True)
+            logger.warning(str(e), exc_info=True)
             return None

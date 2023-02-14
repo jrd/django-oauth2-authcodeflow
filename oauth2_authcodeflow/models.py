@@ -3,7 +3,7 @@ from datetime import (
     timedelta,
     timezone,
 )
-from logging import warning
+from logging import getLogger
 from typing import (
     Optional,
     cast,
@@ -17,6 +17,8 @@ from django.utils.functional import cached_property
 from jose import jwt
 
 from .conf import settings
+
+logger = getLogger(__name__)
 
 
 class BlacklistedToken(models.Model):
@@ -46,7 +48,7 @@ class BlacklistedToken(models.Model):
         try:
             return cls.objects.create(username=username, token=token, expires_at=expires_at, blacklisted_at=now)
         except DatabaseError as e:
-            warning(str(e))
+            logger.warning(str(e))
             return None
 
     @classmethod

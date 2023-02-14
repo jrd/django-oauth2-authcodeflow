@@ -2,10 +2,7 @@ import json
 from base64 import urlsafe_b64encode
 from hashlib import sha256
 from importlib import import_module
-from logging import (
-    debug,
-    warning,
-)
+from logging import getLogger
 from typing import (
     Dict,
     List,
@@ -39,6 +36,8 @@ from .conf import (
 )
 from .models import BlacklistedToken
 from .utils import OIDCUrlsMixin
+
+logger = getLogger(__name__)
 
 
 class BadRequestException(Exception):
@@ -191,7 +190,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
     def prepare_session_and_get_state(self, request: HttpRequest, from_cli: bool) -> Optional[str]:
         state = request.GET.get('state', None)
         if state and from_cli:
-            debug("Try to get the session from the state parameter instead of using cookies")
+            logger.debug("Try to get the session from the state parameter instead of using cookies")
             try:
                 # as called from CLI initialy, the session will not be in the cookie.
                 # hence, load the session from the session_key stored in the jwt state
@@ -200,7 +199,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
                 request.session = self.SessionStore(session_key)
                 for key, value in old_session_items:
                     request.session.setdefault(key, value)
-                debug(f"request.session replaced with request.session.session_key={request.session.session_key}")
+                logger.debug(f"request.session replaced with request.session.session_key={request.session.session_key}")
             except (JWTError, KeyError):
                 raise BadRequestException("state appears to be a JWT but the signature failed")
         return state
@@ -214,7 +213,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
 
     def get_redirect_url(self, request: HttpRequest, use_pkce: bool, from_cli: bool, state: Optional[str], next_url: str, failure_url: str) -> str:
         if request.GET.get('error'):
-            warning(request.GET['error'])
+            logger.warning(request.GET['error'])
             # Make sure the user doesn't get to continue to be logged in in Django
             if request.user.is_authenticated:
                 auth.logout(request)
@@ -250,7 +249,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
             return self.build_response_from_http(request, url)
 
     def get(self, request: HttpRequest) -> HttpResponse:
-        debug(f"request.session.session_key={request.session.session_key}, request.session.keys()={request.session.keys()}")
+        logger.debug(f"request.session.session_key={request.session.session_key}, request.session.keys()={request.session.keys()}")
         from_cli = self.get_from_cli(request)
         try:
             state = self.prepare_session_and_get_state(request, from_cli)
@@ -300,7 +299,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
             else:
                 return self.get_url_with_params(failure_url, error="OIDC authent callback, no user error")
         except Exception as e:
-            warning(repr(e))
+            logger.warning(repr(e))
             return self.get_url_with_params(failure_url, error=str(e))
 
     def logout_callback(self, request: HttpRequest, next_url: str, failure_url: str) -> str:
@@ -317,7 +316,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
                 request.session.save()
                 return self.get_url_with_params(failure_url, error="OIDC logout callback, bad state error")
         except Exception as e:
-            warning(repr(e))
+            logger.warning(repr(e))
             return self.get_url_with_params(failure_url, error=str(e))
 
 
@@ -405,5 +404,5 @@ class LogoutByOPView(CacheBaseView):
                 raise ValueError("missing id_token session parameter")
             return HttpResponse()
         except Exception as e:
-            warning(repr(e))
+            logger.warning(repr(e))
             return HttpResponseBadRequest(str(e).encode('utf8'))
