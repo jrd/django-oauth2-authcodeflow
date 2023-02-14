@@ -1,0 +1,1 @@
+- Added documentation and changelog urls for PyPI 

@@ -20,7 +20,7 @@ help:
 	@echo ""
 	@echo "TARGETS:"
 	@echo "  clean: delete all generated files"
-	@echo "  install_dev_deps: only install developpement dependencies"
+	@echo "  install_dev_deps: only install developpement and typing dependencies"
 	@echo "  install_prod_deps: only install production dependencies"
 	@echo "  install_all_deps: install all dependencies"
 	@echo "  linter: run linter on source code"
@@ -39,7 +39,7 @@ clean:
 	@find . -type d -name __pycache__ -prune -exec rm -rf '{}' \;
 
 install_dev_deps:
-	@poetry install -n --sync --no-root --only=dev
+	@poetry install -n --sync --no-root --only=dev,typing
 
 install_prod_deps:
 	@poetry install -n --sync --no-root --only=main
