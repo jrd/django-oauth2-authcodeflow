@@ -6,6 +6,7 @@ Summary
 [![python versions][py-image]][pypi-url]
 [![django versions][django-image]][pypi-url]
 [![pipeline status][pipeline-image]][pipeline-url]
+[![coverage status][coverage-image]][coverage-url]
 [![license][license-image]](./LICENSE)
 
 [pypi-url]: https://pypi.org/project/django-oauth2-authcodeflow/
@@ -15,6 +16,8 @@ Summary
 [django-image]: https://img.shields.io/pypi/djversions/django-oauth2-authcodeflow.svg
 [pipeline-image]: https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/badges/master/pipeline.svg?ignore_skipped=true
 [pipeline-url]: https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/commits/master
+[coverage-image]: https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/badges/master/coverage.svg
+[coverage-url]: https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/commits/master
 [license-image]: https://img.shields.io/pypi/l/django-oauth2-authcodeflow.svg
 
 Authenticate with any OpenId Connect/Oauth2 provider through authorization code flow with [Django](https://www.djangoproject.com/).
