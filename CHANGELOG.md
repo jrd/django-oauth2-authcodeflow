@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.0.0
+### Changed
+- Each log (debug, warning, error) is now correctly bound to the module name.
+- Mypy 1.0
+### Added
+- Added documentation and changelog urls for PyPI 
+
 ## 0.9.0
 ### Fixed
 - Default value for `jwks` in `BearerAuthenticationBackend` should be dict, not a list.
