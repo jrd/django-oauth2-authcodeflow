@@ -99,10 +99,13 @@ directory = "reports/coverage"
 title = "Django OAuth2 Auth Code Flow coverage"
 
 [[tool.poetry.source]]
-name = "testpypi"
+name = "PyPI"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "testPyPI"
 url = "https://test.pypi.org/legacy/"
-default = false
-secondary = false
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]

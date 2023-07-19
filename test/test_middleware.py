@@ -334,7 +334,7 @@ class TestRefreshAccessTokenMiddleware:
         session[constants.SESSION_ID_TOKEN] = 'abc123'
         middleware.check_access_token(request)
         assert session.session_key is None
-        expires_at = (frozen_datetime() + timedelta(seconds=20)).timestamp()
+        expires_at = (datetime.now(timezone.utc) + timedelta(seconds=20)).timestamp()
         session = sf(request)
         session[constants.SESSION_ID_TOKEN] = 'abc123'
         session[constants.SESSION_REFRESH_TOKEN] = '13579'
@@ -343,8 +343,8 @@ class TestRefreshAccessTokenMiddleware:
         session[constants.SESSION_OP_TOKEN_URL] = 'token_url'
         middleware.check_access_token(request)
         assert session.session_key is None
-        expires_at = (frozen_datetime() - timedelta(seconds=20)).timestamp()
-        expected_expires_at = (frozen_datetime() + timedelta(seconds=120)).timestamp()
+        expires_at = (datetime.now(timezone.utc) - timedelta(seconds=20)).timestamp()
+        expected_expires_at = (datetime.now(timezone.utc) + timedelta(seconds=120)).timestamp()
         session = sf(request)
         session[constants.SESSION_ID_TOKEN] = 'abc123'
         session[constants.SESSION_REFRESH_TOKEN] = '13579'
@@ -410,7 +410,7 @@ class TestRefreshSessionMiddleware:
     @patch('oauth2_authcodeflow.middleware.BlacklistedToken')
     def test_check_session(self, BlacklistedToken, is_refreshable_url, rf, sf, frozen_datetime):
         is_refreshable_url.return_value = False
-        expires_at = (frozen_datetime() + timedelta(seconds=20)).timestamp()
+        expires_at = (datetime.now(timezone.utc) + timedelta(seconds=20)).timestamp()
         request = rf.get('/')
         session = sf(request)
         session[constants.SESSION_ID_TOKEN] = 'abc123'
@@ -426,7 +426,7 @@ class TestRefreshSessionMiddleware:
             middleware.check_session(request)
             BlacklistedToken.blacklist.assert_not_called()
         with pytest.raises(MiddlewareException, match=escape("Session has expired")):
-            expires_at = (frozen_datetime() - timedelta(seconds=20)).timestamp()
+            expires_at = (datetime.now(timezone.utc) - timedelta(seconds=20)).timestamp()
             session = sf(request)
             session[constants.SESSION_ID_TOKEN] = 'abc123'
             session[constants.SESSION_EXPIRES_AT] = expires_at
