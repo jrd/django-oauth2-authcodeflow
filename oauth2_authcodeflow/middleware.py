@@ -1,10 +1,9 @@
+from datetime import (
+    datetime,
+    timezone,
+)
 from logging import getLogger
 from re import search
-from time import (
-    gmtime,
-    mktime,
-    strftime,
-)
 from typing import (
     Callable,
     Optional,
@@ -232,14 +231,13 @@ class RefreshAccessTokenMiddleware(Oauth2MiddlewareMixin):
         if constants.SESSION_REFRESH_TOKEN not in request.session:
             return
         utc_expiration = request.session[constants.SESSION_ACCESS_EXPIRES_AT]
-        utc_now_struct = gmtime()
-        utc_now = mktime(utc_now_struct)
+        utc_now = int(datetime.now(tz=timezone.utc).timestamp())
         if utc_expiration > utc_now:
             # The id_token is still valid, so we don't have to do anything.
             logger.debug(
                 'access token is still valid (%s > %s)',
-                strftime('%d/%m/%Y, %H:%M:%S', gmtime(utc_expiration)),
-                strftime('%d/%m/%Y, %H:%M:%S', utc_now_struct),
+                datetime.fromtimestamp(utc_expiration).strftime('%d/%m/%Y, %H:%M:%S'),
+                datetime.fromtimestamp(utc_now).strftime('%d/%m/%Y, %H:%M:%S'),
             )
             return
         logger.debug('access token has expired')
@@ -294,14 +292,13 @@ class RefreshSessionMiddleware(Oauth2MiddlewareMixin):
             msg = f"No {constants.SESSION_EXPIRES_AT} parameter in the backend session"
             logger.debug(msg)
             raise MiddlewareException(msg)
-        utc_now_struct = gmtime()
-        utc_now = mktime(utc_now_struct)
+        utc_now = datetime.now(tz=timezone.utc).timestamp()
         if utc_expiration > utc_now:
             # The session is still valid, so we don't have to do anything.
             logger.debug(
                 'session is still valid (%s > %s)',
-                strftime('%d/%m/%Y, %H:%M:%S', gmtime(utc_expiration)),
-                strftime('%d/%m/%Y, %H:%M:%S', utc_now_struct),
+                datetime.fromtimestamp(utc_expiration).strftime('%d/%m/%Y, %H:%M:%S'),
+                datetime.fromtimestamp(utc_now).strftime('%d/%m/%Y, %H:%M:%S'),
             )
             return
         # The session has expired, an authentication is now required
