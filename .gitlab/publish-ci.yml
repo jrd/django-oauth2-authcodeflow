@@ -12,5 +12,4 @@ include:
   script:
     - |
       set -e
-      poetry config pypi-token.pypi "$PYPI_TOKEN"
-      make pypi_upload
+      poetry publish -u '__token__' -p "$PYPI_TOKEN"
