@@ -10,10 +10,10 @@
 	bump_version \
 	merge_changelogs \
 	project \
-	build \
-	test_upload \
-	pypi_upload
+	build
 SHELL:=/bin/bash -eo pipefail -c
+changelog_dir:=_CHANGELOGS
+changelog_ext:=md
 
 help:
 	@echo "make TARGET"
@@ -31,8 +31,6 @@ help:
 	@echo "  merge_changelogs: merge $(changelog_dir)/*/*.$(changelog_ext) into CHANGELOG.md file"
 	@echo "  project: create a fake project"
 	@echo "  build: create source and wheel packages"
-	@echo "  test_upload: build and upload packages to testpypi (always do this first)"
-	@echo "  pypi_upload: build and upload packages to pypi"
 
 clean:
 	@rm -rf build dist reports *.egg-info 2>/dev/null
@@ -82,9 +80,3 @@ project:
 
 build: clean
 	@poetry build
-
-test_upload: build
-	@poetry publish -r testpypi
-
-pypi_upload: build
-	@poetry publish

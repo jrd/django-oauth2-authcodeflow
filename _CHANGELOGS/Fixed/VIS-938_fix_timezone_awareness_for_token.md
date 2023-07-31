@@ -1,1 +1,0 @@
-- Fix timestamp-awareness inside `RefreshSession` and `RefreshAccessToken` middlewares

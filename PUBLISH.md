@@ -5,10 +5,12 @@ To automatically create a new version, you can use the following sequences:
 
 ```
 make bump_version what=minor
-make build
+make merge_changelogs
 ```
 
-Don't forget to commit and push before releasing.
+- commit
+- create tag
+- push
 
 Upload to PyPI
 ==============
@@ -21,7 +23,8 @@ Create a account on https://test.pypi.org
 Upload the packages to the test repository:
 
 ```
-make test_upload
+make build
+poetry publish -r testPyPI -u __token__ -p your_token
 ```
 
 Upload to official repository
@@ -32,6 +35,7 @@ Create a account https://pypi.org (the account is not shared with the test repos
 Upload the packages to the repository:
 
 ```
-make pypi_upload
+make build
+poetry publish -u __token__ -p your_token
 ```
 
