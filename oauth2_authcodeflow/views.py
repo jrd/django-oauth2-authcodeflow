@@ -97,7 +97,7 @@ class AuthenticateView(CacheBaseView, UrlParamsMixin):
         return next_url, failure_url
 
     def get_claims_parameter(self, request: HttpRequest) -> Optional[Dict[str, str]]:
-        if request.session.get(constants.OIDC_CLAIMS_PARAMETER_SUPPORTED, False):
+        if request.session.get(constants.SESSION_OP_CLAIMS_PARAMETER_SUPPORTED, False):
             claims_parameter = {}
             if settings.OIDC_RP_USERINFO_CLAIMS:
                 claims_parameter['userinfo'] = settings.OIDC_RP_USERINFO_CLAIMS
