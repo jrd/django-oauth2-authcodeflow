@@ -33,7 +33,7 @@ Wording
 Setup
 -----
 
-- add `oauth2_authcodeflow` to the `INSTALLED_APPS` (after `django.contrib.auth` and `django.contrib.session` apps)
+- add `oauth2_authcodeflow` to the `INSTALLED_APPS` (after `django.contrib.auth` and `django.contrib.sessions` apps)
 - add `path('oidc/', include('oauth2_authcodeflow.urls')),` in your global `urls.py` file.
 
     You can change the path prefix to what you want
