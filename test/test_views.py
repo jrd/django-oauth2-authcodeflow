@@ -144,9 +144,9 @@ class TestAuthenticateView:
         settings.OIDC_RP_USERINFO_CLAIMS = {}
         settings.OIDC_RP_TOKEN_CLAIMS = {}
         assert view.get_claims_parameter(request) is None
-        session[constants.OIDC_CLAIMS_PARAMETER_SUPPORTED] = False
+        session[constants.SESSION_OP_CLAIMS_PARAMETER_SUPPORTED] = False
         assert view.get_claims_parameter(request) is None
-        session[constants.OIDC_CLAIMS_PARAMETER_SUPPORTED] = True
+        session[constants.SESSION_OP_CLAIMS_PARAMETER_SUPPORTED] = True
         assert view.get_claims_parameter(request) is None
         settings.OIDC_RP_USERINFO_CLAIMS = {'is_admin': None}
         assert view.get_claims_parameter(request) == {'userinfo': {'is_admin': None}}
