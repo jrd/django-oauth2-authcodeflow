@@ -1,6 +1,6 @@
 .python:
   image:
-    name: python:3.7
+    name: python:3.8
     entrypoint:
       - "/bin/bash"
       - "-c"

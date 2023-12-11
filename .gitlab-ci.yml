@@ -18,8 +18,6 @@ linter:
   extends: .linter
 type_checker:
   extends: .type_checker
-  # the code is not ready yet
-  allow_failure: true
 unit_tests:
   extends: .unit_tests
 .tag_base:
