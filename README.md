@@ -129,6 +129,10 @@ BearerAuthMiddleware will use `oauth2_authcodeflow.auth.BearerAuthenticationBack
 
 Use this to allow to authenticate without cookies/session. You then need to login with `from_cli=1` in your `login` url. You then needs to go to the displayed url with a browser and copy the result http header to make further requests.
 
+Signals
+-------
+
+One can use Django `user_logged_in` and `user_logged_out` [signals](https://docs.djangoproject.com/en/5.0/ref/contrib/auth/#module-django.contrib.auth.signals) to know and act when a user is logged in or disconnected.
 
 Full configuration
 ------------------
