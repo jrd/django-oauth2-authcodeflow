@@ -113,19 +113,19 @@ class Oauth2MiddlewareMixin:
                 logger.debug(f"token {id_token} is blacklisted")
                 raise MiddlewareException(f"token {id_token} is blacklisted")
 
+    def get_param_url(self, request: HttpRequest, get_field: str, session_field: str) -> str:
+        url = request.GET.get(get_field) if request.method == 'GET' else None
+        if not url:
+            url = request.session.get(session_field)
+        if not url:
+            url = '/'
+        return request.build_absolute_uri(url)
+
     def get_next_url(self, request: HttpRequest) -> str:
-        if request.method == 'GET':
-            next_url = request.GET.get(settings.OIDC_REDIRECT_OK_FIELD_NAME)
-            return request.build_absolute_uri() if next_url is None else next_url
-        else:
-            return request.session.get(constants.SESSION_NEXT_URL, '/')
+        return self.get_param_url(request, settings.OIDC_REDIRECT_OK_FIELD_NAME, constants.SESSION_NEXT_URL)
 
     def get_failure_url(self, request: HttpRequest) -> str:
-        if request.method == 'GET':
-            failure_url = request.GET.get(settings.OIDC_REDIRECT_ERROR_FIELD_NAME)
-            return request.session.get(constants.SESSION_FAIL_URL, '/') if failure_url is None else failure_url
-        else:
-            return request.session.get(constants.SESSION_FAIL_URL, '/')
+        return self.get_param_url(request, settings.OIDC_REDIRECT_ERROR_FIELD_NAME, constants.SESSION_FAIL_URL)
 
     def destroy_session(self, request: HttpRequest) -> None:
         try:

@@ -134,37 +134,41 @@ class TestOauth2MiddlewareMixin:
         mixin = Oauth2MiddlewareMixin(MagicMock(), 'test', MagicMock())
         request = rf.get('/some/url')
         session = sf(request)
-        assert mixin.get_next_url(request) == 'http://testserver/some/url'
+        assert mixin.get_next_url(request) == 'http://testserver/'
         request = rf.get('/some/url', {'ok': '/next/url'})
         session = sf(request)
-        assert mixin.get_next_url(request) == '/next/url'
+        assert mixin.get_next_url(request) == 'http://testserver/next/url'
         request = rf.post('/some/api')
         session = sf(request)
-        assert mixin.get_next_url(request) == '/'
-        request = rf.post('/some/api')
+        assert mixin.get_next_url(request) == 'http://testserver/'
+        request = rf.get('/some/api', {'ok': '/overriden/url'})
         session = sf(request)
         session[constants.SESSION_NEXT_URL] = '/next/url'
-        assert mixin.get_next_url(request) == '/next/url'
+        assert mixin.get_next_url(request) == 'http://testserver/overriden/url'
+        request = rf.post('/some/api')
+        session = sf(request)
+        session[constants.SESSION_NEXT_URL] = 'http://otherserver/next/url'
+        assert mixin.get_next_url(request) == 'http://otherserver/next/url'
 
     def test_get_failure_url(self, rf, sf, settings):
         settings.OIDC_REDIRECT_ERROR_FIELD_NAME = 'ko'
         mixin = Oauth2MiddlewareMixin(MagicMock(), 'test', MagicMock())
         request = rf.get('/some/url')
         session = sf(request)
-        assert mixin.get_failure_url(request) == '/'
+        assert mixin.get_failure_url(request) == 'http://testserver/'
         session[constants.SESSION_FAIL_URL] = '/fail/url'
-        assert mixin.get_failure_url(request) == '/fail/url'
+        assert mixin.get_failure_url(request) == 'http://testserver/fail/url'
         request = rf.get('/some/url', {'ko': '/failure/url'})
         session = sf(request)
         session[constants.SESSION_FAIL_URL] = '/fail/url'
-        assert mixin.get_failure_url(request) == '/failure/url'
+        assert mixin.get_failure_url(request) == 'http://testserver/failure/url'
+        request = rf.get('/some/api', {'ko': '/overriden/url'})
+        session = sf(request)
+        assert mixin.get_failure_url(request) == 'http://testserver/overriden/url'
         request = rf.post('/some/api')
         session = sf(request)
-        assert mixin.get_failure_url(request) == '/'
-        request = rf.post('/some/api')
-        session = sf(request)
-        session[constants.SESSION_FAIL_URL] = '/fail/url'
-        assert mixin.get_failure_url(request) == '/fail/url'
+        session[constants.SESSION_FAIL_URL] = 'http://otherserver/fail/url'
+        assert mixin.get_failure_url(request) == 'http://otherserver/fail/url'
 
     def test_destroy_session(self, rf, sf, db):
         request = rf.get('/some/url')
