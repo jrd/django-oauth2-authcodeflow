@@ -321,11 +321,13 @@ class TestRefreshAccessTokenMiddleware:
     def test_check_access_token(self, request_post, BlacklistedToken, is_refreshable_url, db, rf, sf, frozen_datetime, settings):
         settings.OIDC_RP_CLIENT_ID = 'client_id'
         settings.OIDC_RP_CLIENT_SECRET = 'client_secret'
+        settings.OIDC_RP_USE_PKCE = True
         request_post.return_value.json.return_value = {
             'access_token': '456789',
             'expires_in': 120,
         }
         request_post.return_value.text = "some error"
+        # case not refreshable url
         is_refreshable_url.return_value = False
         request = rf.get('/')
         session = sf(request)
@@ -333,11 +335,15 @@ class TestRefreshAccessTokenMiddleware:
         middleware = RefreshAccessTokenMiddleware(MagicMock())
         middleware.check_access_token(request)
         assert session.session_key is None
+        request_post.assert_not_called()
+        # case no refresh token
         is_refreshable_url.return_value = True
         session = sf(request)
         session[constants.SESSION_ID_TOKEN] = 'abc123'
         middleware.check_access_token(request)
         assert session.session_key is None
+        request_post.assert_not_called()
+        # case not expired
         expires_at = (datetime.now(timezone.utc) + timedelta(seconds=20)).timestamp()
         session = sf(request)
         session[constants.SESSION_ID_TOKEN] = 'abc123'
@@ -347,6 +353,8 @@ class TestRefreshAccessTokenMiddleware:
         session[constants.SESSION_OP_TOKEN_URL] = 'token_url'
         middleware.check_access_token(request)
         assert session.session_key is None
+        request_post.assert_not_called()
+        # case expired, but same id token
         expires_at = (datetime.now(timezone.utc) - timedelta(seconds=20)).timestamp()
         expected_expires_at = (datetime.now(timezone.utc) + timedelta(seconds=120)).timestamp()
         session = sf(request)
@@ -361,13 +369,23 @@ class TestRefreshAccessTokenMiddleware:
         assert session[constants.SESSION_ACCESS_TOKEN] == '456789'
         assert session[constants.SESSION_ACCESS_EXPIRES_AT] == expected_expires_at
         assert session[constants.SESSION_REFRESH_TOKEN] == '13579'
+        request_post.assert_called_once_with('token_url', data=dict(
+            grant_type='refresh_token',
+            client_id=settings.OIDC_RP_CLIENT_ID,
+            client_secret=settings.OIDC_RP_CLIENT_SECRET,
+            refresh_token='13579',
+        ))
         BlacklistedToken.blacklist.assert_not_called()
+        # case expired, different id token
+        # without client secret
+        settings.OIDC_RP_CLIENT_SECRET = None
         session = sf(request)
         session[constants.SESSION_ID_TOKEN] = 'abc123'
         session[constants.SESSION_REFRESH_TOKEN] = '13579'
         session[constants.SESSION_ACCESS_TOKEN] = '123456'
         session[constants.SESSION_ACCESS_EXPIRES_AT] = expires_at
         session[constants.SESSION_OP_TOKEN_URL] = 'token_url'
+        request_post.reset_mock()
         request_post.return_value.json.return_value.update(id_token='abc456', refresh_token='24680')
         middleware.check_access_token(request)
         assert session.session_key is not None
@@ -375,7 +393,16 @@ class TestRefreshAccessTokenMiddleware:
         assert session[constants.SESSION_ACCESS_TOKEN] == '456789'
         assert session[constants.SESSION_ACCESS_EXPIRES_AT] == expected_expires_at
         assert session[constants.SESSION_REFRESH_TOKEN] == '24680'
+        request_post.assert_called_once_with('token_url', data=dict(
+            grant_type='refresh_token',
+            client_id=settings.OIDC_RP_CLIENT_ID,
+            refresh_token='13579',
+        ))
         BlacklistedToken.blacklist.assert_called_once_with('abc123')
+        # case refresh is denied by OP
+        # not using PKCE nor client secret
+        settings.OIDC_RP_USE_PKCE = False
+        request_post.reset_mock()
         request_post.return_value.__bool__.return_value = False
         session = sf(request)
         session[constants.SESSION_ID_TOKEN] = 'abc123'
@@ -385,6 +412,12 @@ class TestRefreshAccessTokenMiddleware:
         session[constants.SESSION_OP_TOKEN_URL] = 'token_url'
         with pytest.raises(MiddlewareException, match=escape("some error")):
             middleware.check_access_token(request)
+        request_post.assert_called_once_with('token_url', data=dict(
+            grant_type='refresh_token',
+            client_id=settings.OIDC_RP_CLIENT_ID,
+            client_secret='',
+            refresh_token='13579',
+        ))
 
 
 class TestRefreshSessionMiddleware:
