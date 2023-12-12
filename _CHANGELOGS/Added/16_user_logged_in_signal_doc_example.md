@@ -1,1 +1,0 @@
-- User logged in signal doc example, thanks @pinoatrome (github #16)

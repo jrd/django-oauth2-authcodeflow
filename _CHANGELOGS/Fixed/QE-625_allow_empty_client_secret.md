@@ -1,1 +1,0 @@
-- allow empty client secret (QE-625, gitlab #9)

@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.1.0
+### Fixed
+- redirect after total logout could happen with a GET (#10)
+- allow empty client secret (QE-625, gitlab #9)
+### Added
+- User logged in signal doc example, thanks @pinoatrome (github #16)
+- Drop python 3.7, support python 3.12 and django 5
+
 ## 1.0.1
 ### Fixed
 - Fix timestamp-awareness inside `RefreshSession` and `RefreshAccessToken` middlewares

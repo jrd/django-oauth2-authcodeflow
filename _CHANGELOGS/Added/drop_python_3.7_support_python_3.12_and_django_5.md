@@ -1,1 +1,0 @@
-- Drop python 3.7, support python 3.12 and django 5
