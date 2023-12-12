@@ -170,12 +170,14 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             params = {
                 'grant_type': 'authorization_code',
                 'client_id': settings.OIDC_RP_CLIENT_ID,
-                'client_secret': settings.OIDC_RP_CLIENT_SECRET,
                 'redirect_uri': request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
                 'code': code,
             }
             if use_pkce:
                 params['code_verifier'] = code_verifier
+            # PKCE allows to have empty client secret, in that case the parameter should not be set.
+            if not use_pkce or settings.OIDC_RP_CLIENT_SECRET:
+                params['client_secret'] = settings.OIDC_RP_CLIENT_SECRET or ''
             resp = request_post(request.session[constants.SESSION_OP_TOKEN_URL], data=params)
             if resp.status_code != 200:
                 raise SuspiciousOperation(f"{resp.status_code} {resp.text}")

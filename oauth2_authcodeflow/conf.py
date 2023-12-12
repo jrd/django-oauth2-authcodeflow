@@ -69,7 +69,7 @@ DEFAULTS: Dict[str, Tuple[Any, Any]] = {
     'OIDC_OP_EXPECTED_CLAIMS': (list, []),
     # OpenID Connect client ID provided for your Relaying Party/client by your OpenIdConnect Provider
     'OIDC_RP_CLIENT_ID': (str, ImproperlyConfigured),
-    # OpenID Connect client secret provided for your Relaying Party/client by your OpenIdConnect Provider
+    # OpenID Connect client secret provided for your Relaying Party/client by your OpenIdConnect Provider. Could be empty in PKCE case.
     'OIDC_RP_CLIENT_SECRET': (str, ImproperlyConfigured),
     # `PKCE` improve security, disable it only if your provider cannot handle it.
     'OIDC_RP_USE_PKCE': (bool, True),

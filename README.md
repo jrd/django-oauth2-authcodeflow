@@ -22,7 +22,11 @@ Summary
 
 Authenticate with any OpenId Connect/Oauth2 provider through authorization code flow with [Django](https://www.djangoproject.com/).
 
-PKCE is also supported.
+Supported protocols:
+
+- [Oauth 2.0](https://www.rfc-editor.org/rfc/rfc6749)
+- [PKCE](https://www.rfc-editor.org/rfc/rfc7636)
+- [OpenIDConnect 1.0](https://openid.net/specs/openid-connect-rpinitiated-1_0.html)
 
 Wording
 -------
@@ -159,7 +163,7 @@ Specific OIDC settings:
 | `OIDC_OP_EXPECTED_EMAIL_CLAIM` | expected email key. | `'email'` |
 | `OIDC_OP_EXPECTED_CLAIMS` | `OIDC_OP_EXPECTED_EMAIL_CLAIM` value is automatically included in this list. | `[]` |
 | `OIDC_RP_CLIENT_ID` | OpenID Connect client ID provided for your Relaying Party/client by your OpenIdConnect Provider | |
-| `OIDC_RP_CLIENT_SECRET` | OpenID Connect client secret provided for your Relaying Party/client by your OpenIdConnect Provider | |
+| `OIDC_RP_CLIENT_SECRET` | OpenID Connect client secret provided for your Relaying Party/client by your OpenIdConnect Provider.<br>Could be empty in PKCE case. | |
 | `OIDC_RP_USE_PKCE` | `PKCE` improve security, disable it only if your provider cannot handle it. | `True` |
 | `OIDC_RP_FORCE_CONSENT_PROMPT` | Force to ask for consent on login, even if `offline_access` is not in scopes | `False` |
 | `OIDC_RP_SCOPES` | The OpenID Connect scopes to request during login.<br>The scopes could be usefull later to get access to other ressources.<br>`openid` must be in the list.<br>You can also include the `email` scope to ensure that the email field will be in the claims (*recommended*).<br>You can also include the `profile` scope to get more (like names, …) info in the `id_token` (*recommended*).<br>You can also get a `refresh_token` by specifying the `offline_access` scope. | `['openid', 'email', 'profile', 'offline_access']` |

@@ -424,6 +424,56 @@ class TestAuthenticationBackend:
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_claims')
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_and_decode_id_token')
     @patch('oauth2_authcodeflow.auth.request_post')
+    def test_authenticate_oauth2_return_user_with_pkce_no_secret(
+        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user,
+        frozen_datetime, caplog, db, rf, sf, settings
+    ):
+        request_post.return_value.status_code = 200
+        request_post.return_value.json.return_value = {
+            'id_token': 'ID_TOKEN',
+            'access_token': 'ACCESS_TOKEN',
+        }
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = ''
+        settings.OIDC_RP_SCOPES = ['openid', 'email', 'profile', 'offline_access']
+        settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS = 7 * 86400
+        access_expires_at = int(frozen_datetime.fake_utcnow.timestamp()) + 2 * 60
+        claims = {
+            'aud': settings.OIDC_RP_CLIENT_ID,
+            'email': 'my-email@example.com',
+            'exp': access_expires_at,
+        }
+        validate_and_decode_id_token.return_value = claims
+        get_or_create_user.return_value = 'user'
+        authentication = AuthenticationBackend()
+        request = rf.get('/api/protected_resource')
+        session = sf(request)
+        session[constants.SESSION_OP_TOKEN_URL] = 'token_url'
+        session.save()
+        request.build_absolute_uri = lambda uri: uri
+        assert authentication.authenticate_oauth2(request, True, 'code', 'state', 'nonce', 'verifier') == 'user'
+        request_post.assert_called_once_with('token_url', data={
+            'grant_type': 'authorization_code',
+            'client_id': settings.OIDC_RP_CLIENT_ID,
+            'redirect_uri': '/oidc/callback',
+            'code': 'code',
+            'code_verifier': 'verifier',
+        })
+        assert dict(session.items()) == {
+            constants.SESSION_OP_TOKEN_URL: 'token_url',
+            constants.SESSION_ID_TOKEN: 'ID_TOKEN',
+            constants.SESSION_ACCESS_TOKEN: 'ACCESS_TOKEN',
+            constants.SESSION_ACCESS_EXPIRES_AT: access_expires_at,
+            constants.SESSION_EXPIRES_AT: int(frozen_datetime.fake_utcnow.timestamp()) + 7 * 86400,
+        }
+        validate_and_decode_id_token.assert_called_once_with('ID_TOKEN', 'nonce', {})
+        validate_claims.assert_called_once_with(claims)
+        get_or_create_user.assert_called_once_with(request, claims, 'ACCESS_TOKEN')
+
+    @patch('oauth2_authcodeflow.auth.AuthenticationBackend.get_or_create_user')
+    @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_claims')
+    @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_and_decode_id_token')
+    @patch('oauth2_authcodeflow.auth.request_post')
     def test_authenticate_oauth2_return_user_with_pkce_with_refresh_and_exp(
         self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user,
         frozen_datetime, caplog, db, rf, sf, settings
@@ -487,6 +537,50 @@ class TestAuthenticationBackend:
         }
         settings.OIDC_RP_CLIENT_ID = 'a_client_id'
         settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        settings.OIDC_RP_SCOPES = ['openid', 'email', 'profile']
+        settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS = 7 * 86400
+        validate_and_decode_id_token.return_value = {
+            'aud': settings.OIDC_RP_CLIENT_ID,
+            'email': 'my-email@example.com',
+        }
+        get_or_create_user.return_value = 'user'
+        authentication = AuthenticationBackend()
+        request = rf.get('/api/protected_resource')
+        session = sf(request)
+        session[constants.SESSION_OP_TOKEN_URL] = 'token_url'
+        session.save()
+        request.build_absolute_uri = lambda uri: uri
+        assert authentication.authenticate_oauth2(request, False, 'code', 'state', 'nonce', None) == 'user'
+        request_post.assert_called_once_with('token_url', data={
+            'grant_type': 'authorization_code',
+            'client_id': settings.OIDC_RP_CLIENT_ID,
+            'client_secret': settings.OIDC_RP_CLIENT_SECRET,
+            'redirect_uri': '/oidc/callback',
+            'code': 'code',
+        })
+        assert dict(session.items()) == {
+            constants.SESSION_OP_TOKEN_URL: 'token_url',
+            constants.SESSION_ID_TOKEN: 'ID_TOKEN',
+            constants.SESSION_ACCESS_TOKEN: 'ACCESS_TOKEN',
+            constants.SESSION_ACCESS_EXPIRES_AT: int(frozen_datetime.fake_utcnow.timestamp()) + 7 * 86400,
+            constants.SESSION_EXPIRES_AT: int(frozen_datetime.fake_utcnow.timestamp()) + 7 * 86400,
+        }
+
+    @patch('oauth2_authcodeflow.auth.AuthenticationBackend.get_or_create_user')
+    @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_claims')
+    @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_and_decode_id_token')
+    @patch('oauth2_authcodeflow.auth.request_post')
+    def test_authenticate_oauth2_return_user_without_pkce_no_secret(
+        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user,
+        frozen_datetime, caplog, db, rf, sf, settings
+    ):
+        request_post.return_value.status_code = 200
+        request_post.return_value.json.return_value = {
+            'id_token': 'ID_TOKEN',
+            'access_token': 'ACCESS_TOKEN',
+        }
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = ''
         settings.OIDC_RP_SCOPES = ['openid', 'email', 'profile']
         settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS = 7 * 86400
         validate_and_decode_id_token.return_value = {
