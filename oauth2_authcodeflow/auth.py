@@ -81,7 +81,7 @@ class AuthenticationMixin:
 
     def validate_claims(self, claims: Dict) -> None:
         expected_list = [settings.OIDC_OP_EXPECTED_EMAIL_CLAIM] + list(settings.OIDC_OP_EXPECTED_CLAIMS)
-        logger.debug(f"Validate claims={claims} against expected {expected_list}")
+        logger.debug(f"Validate {claims=} against {expected_list=}")
         for expected in expected_list:
             if expected not in claims:
                 raise SuspiciousOperation(f"'{expected}' claim was expected")

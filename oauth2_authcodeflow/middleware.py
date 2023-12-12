@@ -74,7 +74,7 @@ class Oauth2MiddlewareMixin:
                 constants.OIDC_URL_LOGOUT_BY_OP_NAME,
             )
         ) + tuple(str(p) for p in settings.OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS)
-        logger.debug(f"self.exempt_urls={self.exempt_urls}")
+        logger.debug(f"{self.exempt_urls=}")
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
         response = self.process_request(request)
@@ -83,7 +83,7 @@ class Oauth2MiddlewareMixin:
     def is_oidc_enabled(self, request: HttpRequest) -> bool:
         auth_backend = None
         backend_session = request.session.get(BACKEND_SESSION_KEY)
-        logger.debug(f"backend_session={backend_session}")
+        logger.debug(f"{backend_session=}")
         if backend_session and hasattr(request, 'user') and request.user.is_authenticated:
             auth_backend = import_string(backend_session)
         return issubclass(auth_backend, AuthenticationBackend) if auth_backend else False
@@ -96,7 +96,7 @@ class Oauth2MiddlewareMixin:
         """
         # Do not attempt to refresh the session if the OIDC backend is not used
         is_oidc_enabled = self.is_oidc_enabled(request)
-        logger.debug(f"is_oidc_enabled={is_oidc_enabled}, request.path={request.path}, self.exempt_urls={self.exempt_urls}")
+        logger.debug(f"{is_oidc_enabled=}, {request.path=}, {self.exempt_urls=}")
         if is_oidc_enabled:
             for url_pattern in self.exempt_urls:
                 if search(url_pattern, request.path):
@@ -106,7 +106,7 @@ class Oauth2MiddlewareMixin:
             return False
 
     def check_blacklisted(self, request: HttpRequest) -> None:
-        logger.debug(f"self={self}, request.session.session_key={request.session.session_key}, request.session.keys()={request.session.keys()}")
+        logger.debug(f"{self=}, {request.session.session_key=}, {request.session.keys()=}")
         if constants.SESSION_ID_TOKEN in request.session:
             id_token = request.session[constants.SESSION_ID_TOKEN]
             if BlacklistedToken.is_blacklisted(id_token):

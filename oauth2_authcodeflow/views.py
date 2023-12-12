@@ -199,7 +199,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
                 request.session = self.SessionStore(session_key)
                 for key, value in old_session_items:
                     request.session.setdefault(key, value)
-                logger.debug(f"request.session replaced with request.session.session_key={request.session.session_key}")
+                logger.debug(f"request.session replaced with {request.session.session_key=}")
             except (JWTError, KeyError):
                 raise BadRequestException("state appears to be a JWT but the signature failed")
         return state
@@ -249,7 +249,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
             return self.build_response_from_http(request, url)
 
     def get(self, request: HttpRequest) -> HttpResponse:
-        logger.debug(f"request.session.session_key={request.session.session_key}, request.session.keys()={request.session.keys()}")
+        logger.debug(f"{request.session.session_key=}, {request.session.keys()=}")
         from_cli = self.get_from_cli(request)
         try:
             state = self.prepare_session_and_get_state(request, from_cli)
