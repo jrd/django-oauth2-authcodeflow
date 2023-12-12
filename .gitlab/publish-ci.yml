@@ -12,4 +12,4 @@ include:
   script:
     - |
       set -e
-      poetry publish -u '__token__' -p "$PYPI_TOKEN"
+      poetry publish --build -u '__token__' -p "$PYPI_TOKEN"
