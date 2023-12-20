@@ -149,14 +149,38 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
         code_verifier: Optional[str] = kwargs.pop('code_verifier', None)
         return self.authenticate_oauth2(request, use_pkce, code, state, nonce, code_verifier, **kwargs)
 
-    def authenticate_oauth2(self,
-                            request: HttpRequest,
-                            use_pkce: bool,
-                            code: str,
-                            state: Optional[str],
-                            nonce: Optional[str],
-                            code_verifier: Optional[str],
-                            **kwargs) -> Optional[AbstractBaseUser]:
+    def build_token_request_params(
+        self,
+        request: HttpRequest,
+        use_pkce: bool,
+        code: str,
+        code_verifier: Optional[str],
+        **kwargs,
+    ) -> Dict[str, str]:
+        """Params for (id|access) token request"""
+        params = {
+            'grant_type': 'authorization_code',
+            'client_id': settings.OIDC_RP_CLIENT_ID,
+            'redirect_uri': request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
+            'code': code,
+        }
+        if use_pkce:
+            params['code_verifier'] = code_verifier
+        # PKCE allows to have empty client secret, in that case the parameter should not be set.
+        if not use_pkce or settings.OIDC_RP_FORCE_SECRET_WITH_PKCE:
+            params['client_secret'] = settings.OIDC_RP_CLIENT_SECRET or ''
+        return params
+
+    def authenticate_oauth2(
+        self,
+        request: HttpRequest,
+        use_pkce: bool,
+        code: str,
+        state: Optional[str],
+        nonce: Optional[str],
+        code_verifier: Optional[str],
+        **kwargs,
+    ) -> Optional[AbstractBaseUser]:
         """Authenticates users using OpenID Connect Authorization code flow."""
         if not request:
             return None
@@ -167,17 +191,7 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             else:
                 if not code or not state or not nonce:
                     raise SuspiciousOperation('code, state and nonce values are required')
-            params = {
-                'grant_type': 'authorization_code',
-                'client_id': settings.OIDC_RP_CLIENT_ID,
-                'redirect_uri': request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
-                'code': code,
-            }
-            if use_pkce:
-                params['code_verifier'] = code_verifier
-            # PKCE allows to have empty client secret, in that case the parameter should not be set.
-            if not use_pkce or settings.OIDC_RP_CLIENT_SECRET:
-                params['client_secret'] = settings.OIDC_RP_CLIENT_SECRET or ''
+            params = self.build_token_request_params(request, use_pkce, code, code_verifier)
             resp = request_post(
                 request.session[constants.SESSION_OP_TOKEN_URL],
                 data=params,
