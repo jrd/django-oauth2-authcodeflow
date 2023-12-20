@@ -23,6 +23,7 @@ from oauth2_authcodeflow.auth import (
     AuthenticationBackend,
     AuthenticationMixin,
     BearerAuthenticationBackend,
+    build_token_request_params,
 )
 from oauth2_authcodeflow.utils import OIDCUrlsMixin
 
@@ -310,6 +311,42 @@ class TestAuthenticationMixin:
         assert user4.last_name == 'pontvieux'
         assert user4.is_active is True
         assert user4.has_usable_password() is True
+
+
+class TestBuildTokenRequestParams:
+    def test_build_token_request_params_grant_type(self, rf, settings):
+        expected = 'authorization_code'
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        params = build_token_request_params(rf.get('/protected/resource'), 'code')
+        assert params['grant_type'] == expected
+
+    def test_build_token_request_params_code(self, rf, settings):
+        code = 'a_code'
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        params = build_token_request_params(rf.get('/'), code)
+        assert params['code'] == code
+
+    def test_build_token_request_params_pkce_no_code_verifier(self, rf, settings):
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        with pytest.raises(KeyError):
+            build_token_request_params(rf.get('/'), 'a_code', use_pkce=True)
+
+    def test_build_token_request_params_pkce(self, rf, settings):
+        settings.OIDC_OP_PKCE_ALLOW_SEND_SECRET = False
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        params = build_token_request_params(rf.get('/'), 'a_code', use_pkce=True, code_verifier='a_code_verifier')
+        assert 'client_secret' not in params
+
+    def test_build_token_request_params_pkce_allow(self, rf, settings):
+        settings.OIDC_OP_PKCE_ALLOW_SEND_SECRET = True
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        params = build_token_request_params(rf.get('/'), 'a_code', use_pkce=True, code_verifier='a_code_verifier')
+        assert 'client_secret' in params
 
 
 class TestAuthenticationBackend:

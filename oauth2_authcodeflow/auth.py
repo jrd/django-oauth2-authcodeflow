@@ -6,6 +6,7 @@ from inspect import signature
 from logging import getLogger
 from re import search
 from typing import (
+    Any,
     Dict,
     Optional,
     Type,
@@ -134,6 +135,31 @@ class AuthenticationMixin:
         user.is_active = True
 
 
+def build_token_request_params(request: HttpRequest,
+                               code: str,
+                               **kwargs: Optional[Dict[str, Any]]) -> Dict[str, str]:
+    """return params for token request ('client_secret' param depends on configuration in case of PKCE flow) 
+    """
+
+    params = {
+        'grant_type': 'authorization_code',
+        'client_id': settings.OIDC_RP_CLIENT_ID,
+        'client_secret': settings.OIDC_RP_CLIENT_SECRET,
+        'redirect_uri': request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
+        'code': code,
+    }
+
+    if kwargs.get('use_pkce'):
+        params['code_verifier'] = kwargs['code_verifier']
+        if not settings.OIDC_OP_PKCE_ALLOW_SEND_SECRET:  # OP settings doesn't allow sending the secret (PKCE)
+            params.pop('client_secret', None)
+
+        if not bool(settings.OIDC_RP_CLIENT_SECRET):
+            params.pop('client_secret', None)  # retro compatible: do not add if empty value
+
+    return params
+
+
 class AuthenticationBackend(ModelBackend, AuthenticationMixin):
     def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None, **kwargs) -> Optional[AbstractBaseUser]:
         """Authenticates users using OpenID Connect Authorization code flow."""
@@ -167,17 +193,7 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             else:
                 if not code or not state or not nonce:
                     raise SuspiciousOperation('code, state and nonce values are required')
-            params = {
-                'grant_type': 'authorization_code',
-                'client_id': settings.OIDC_RP_CLIENT_ID,
-                'redirect_uri': request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
-                'code': code,
-            }
-            if use_pkce:
-                params['code_verifier'] = code_verifier
-            # PKCE allows to have empty client secret, in that case the parameter should not be set.
-            if not use_pkce or settings.OIDC_RP_CLIENT_SECRET:
-                params['client_secret'] = settings.OIDC_RP_CLIENT_SECRET or ''
+            params = build_token_request_params(request, code, use_pkce=use_pkce, code_verifier=code_verifier)
             resp = request_post(request.session[constants.SESSION_OP_TOKEN_URL], data=params)
             if resp.status_code != 200:
                 raise SuspiciousOperation(f"{resp.status_code} {resp.text}")

@@ -59,6 +59,9 @@ DEFAULTS: Dict[str, Tuple[Any, Any]] = {
     'OIDC_OP_END_SESSION_URL': (str, None),
     # Fetch user info on login or not.
     'OIDC_OP_FETCH_USER_INFO': (bool, True),
+    # avoid `client_secret` param in the request for the token when PKCE flow is used
+    # It depends on the configuration of your OpenID connect Provider token endpoint.
+    'OIDC_OP_PKCE_ALLOW_SEND_SECRET': (bool, True),
     # Do a call to total logout will call the OP for a logout. Default true.
     # Be careful, some OP will not follow the RFC and will not allow the user to NOT logout all connected apps.
     # Azure is such a bad example.

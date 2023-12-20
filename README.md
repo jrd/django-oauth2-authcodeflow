@@ -159,6 +159,7 @@ Specific OIDC settings:
 | `OIDC_OP_JWKS_URL` | URL of your OpenId connect Provider endpoint to get public signing keys (in `PEM` or `DER` format).<br>This is used to verify the `id_token`.<br>This is **not recommended** to provide this url here but rather use `OIDC_OP_DISCOVERY_DOCUMENT_URL` config. | `None` |
 | `OIDC_OP_END_SESSION_URL` | URL of your OpenID connect Provider end session endpoint (not recommended, `OIDC_OP_DISCOVERY_DOCUMENT_URL` is preferred). | `None` |
 | `OIDC_OP_FETCH_USER_INFO` | Fetch user info on login or not. | `True` |
+| `OIDC_OP_PKCE_ALLOW_SEND_SECRET` | remove `client_secret` param from the request for the token when PKCE flow is used. | `True` |
 | `OIDC_OP_TOTAL_LOGOUT` | Do a call to total logout will call the OP for a logout. Default true.<br>Be careful, some OP will not follow the RFC and will not allow the user to NOT logout all connected apps.<br>Azure is such a bad example. | `True` |
 | `OIDC_OP_EXPECTED_EMAIL_CLAIM` | expected email key. | `'email'` |
 | `OIDC_OP_EXPECTED_CLAIMS` | `OIDC_OP_EXPECTED_EMAIL_CLAIM` value is automatically included in this list. | `[]` |
