@@ -12,13 +12,24 @@ def forwards(apps, schema_editor):
         pass
 
 
+def reverses(apps, schema_editor):
+    try:
+        migrations.AddConstraint(
+            model_name='blacklistedtoken',
+            constraint=models.UniqueConstraint(fields=('username', 'token'), name='unique_username_token'),
+        )
+    except Exception:
+        # no add if it’s already there
+        pass
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ('oauth2_authcodeflow', '0001_initial'),
     ]
 
     operations = [
-        migrations.RunPython(forwards),
+        migrations.RunPython(forwards, reverses),
         migrations.AlterField(
             model_name='blacklistedtoken',
             name='id',

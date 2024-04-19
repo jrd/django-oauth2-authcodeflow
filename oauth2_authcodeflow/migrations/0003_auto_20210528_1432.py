@@ -12,6 +12,17 @@ def forwards(apps, schema_editor):
         pass
 
 
+def reverses(apps, schema_editor):
+    try:
+        migrations.RemoveConstraint(
+            model_name='blacklistedtoken',
+            name='unique_username_token',
+        ),
+    except Exception:
+        # no constraint to remove
+        pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -24,5 +35,5 @@ class Migration(migrations.Migration):
             name='token',
             field=models.CharField(editable=False, max_length=15000),
         ),
-        migrations.RunPython(forwards),
+        migrations.RunPython(forwards, reverses),
     ]
