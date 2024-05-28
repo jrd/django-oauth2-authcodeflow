@@ -1,6 +1,15 @@
 from django.db import migrations, models
 from django.db.utils import IntegrityError
 
+def forwards(apps, schema_editor):
+    try:
+        migrations.AddConstraint(
+            model_name='blacklistedtoken',
+            constraint=models.UniqueConstraint(fields=('username', 'token'), name='unique_username_token'),
+        ),
+    except Exception:
+        # no constraint on mysql, max key is 3072 bytes which is not enough
+        pass
 
 class Migration(migrations.Migration):
     atomic = True
@@ -13,10 +22,7 @@ class Migration(migrations.Migration):
             name='id',
             field=models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
         ),
-        migrations.AddConstraint(
-            model_name='blacklistedtoken',
-            constraint=models.UniqueConstraint(fields=('username', 'token'), name='unique_username_token'),
-        ),
+        migrations.RunPython(forwards),
     ]
 
     def apply(self, project_state, *args, **kwargs):
