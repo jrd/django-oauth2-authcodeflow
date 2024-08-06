@@ -1,26 +1,7 @@
-from django.db import migrations, models
-
-
-def forwards(apps, schema_editor):
-    try:
-        migrations.RemoveConstraint(
-            model_name='blacklistedtoken',
-            name='unique_username_token',
-        )
-    except Exception:
-        # no removal if it’s not there
-        pass
-
-
-def reverses(apps, schema_editor):
-    try:
-        migrations.AddConstraint(
-            model_name='blacklistedtoken',
-            constraint=models.UniqueConstraint(fields=('username', 'token'), name='unique_username_token'),
-        )
-    except Exception:
-        # no add if it’s already there
-        pass
+from django.db import (
+    migrations,
+    models,
+)
 
 
 class Migration(migrations.Migration):
@@ -29,7 +10,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(forwards, reverses),
         migrations.AlterField(
             model_name='blacklistedtoken',
             name='id',
