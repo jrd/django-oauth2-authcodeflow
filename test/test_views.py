@@ -789,14 +789,17 @@ class TestLogoutView:
         get_next_and_failure_url.side_effect = None
         get_next_and_failure_url.return_value = ('/next', '/fail')
         logout.assert_not_called()
+        logout.side_effect = lambda request, id_token, next_url, failure_url: HttpResponseRedirect(failure_url + '?error=some_error')
         request = rf.get('/')
         sf(request)
         response = view.get(request)
         assert response.status_code == 302
-        assert response.headers['Location'] == '/fail?error=id_token+is+missing+from+the+session%2C+cannot+logout'
+        assert response.headers['Location'] == '/fail?error=some_error'
         get_next_and_failure_url.assert_called_once_with(request)
         get_next_and_failure_url.reset_mock()
-        logout.assert_not_called()
+        logout.assert_called_once_with(request, None, '/next', '/fail')
+        logout.reset_mock()
+        logout.side_effect = lambda request, id_token, next_url, failure_url: HttpResponseRedirect(next_url)
         request = rf.get('/')
         session = sf(request)
         session[constants.SESSION_ID_TOKEN] = 'id.token'

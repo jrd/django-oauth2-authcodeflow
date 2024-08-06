@@ -1,0 +1,1 @@
+- Allow to logout even when using the Django `ModelBackend` (github #25)

@@ -338,34 +338,35 @@ class LogoutView(CacheBaseView, UrlParamsMixin):
     def get(self, request: HttpRequest) -> HttpResponse:
         try:
             next_url, failure_url = self.get_next_and_failure_url(request)
-            if constants.SESSION_ID_TOKEN not in request.session:
-                raise ValueError("id_token is missing from the session, cannot logout")
-            id_token = request.session[constants.SESSION_ID_TOKEN]
+            id_token = request.session.get(constants.SESSION_ID_TOKEN, None)
             return self.logout(request, id_token, next_url, failure_url)
         except BadRequestException as e:
             return HttpResponseBadRequest(str(e).encode('utf8'))
+
+    def logout(self, request: HttpRequest, id_token: Optional[str], next_url: str, failure_url: str) -> HttpResponse:
+        try:
+            if id_token:  # only blacklist if an id_token was in the session
+                BlacklistedToken.blacklist(id_token)
+            self._clear_cache(request)
+            if request.user.is_authenticated:
+                auth.logout(request)
+            return HttpResponseRedirect(next_url)
         except Exception as e:
             return HttpResponseRedirect(self.get_url_with_params(failure_url, error=str(e)))
-
-    def logout(self, request: HttpRequest, id_token: str, next_url: str, failure_url: str) -> HttpResponse:
-        BlacklistedToken.blacklist(id_token)
-        self._clear_cache(request)
-        if request.user.is_authenticated:
-            auth.logout(request)
-        return HttpResponseRedirect(next_url)
 
 
 class TotalLogoutView(LogoutView, UrlParamsMixin):
     """
     Logout user from the application, the OP and any application connected to the OP, called by RP user-agent.
     """
-    def logout(self, request: HttpRequest, id_token: str, next_url: str, failure_url: str) -> HttpResponse:
-        BlacklistedToken.blacklist(id_token)
+    def logout(self, request: HttpRequest, id_token: Optional[str], next_url: str, failure_url: str) -> HttpResponse:
+        if id_token:  # only blacklist if an id_token was in the session
+            BlacklistedToken.blacklist(id_token)
         end_session_url = request.session.get(constants.SESSION_OP_END_SESSION_URL)
         if settings.OIDC_OP_TOTAL_LOGOUT and end_session_url:
             state = get_random_string(settings.OIDC_RANDOM_SIZE)
             logout_params = {
-                'id_token_hint': id_token,
+                'id_token_hint': id_token or '',
                 'post_logout_redirect_uri': request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
                 'state': state,
             }
