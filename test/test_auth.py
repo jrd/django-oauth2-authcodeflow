@@ -336,6 +336,78 @@ class TestAuthenticationBackend:
         assert authentication.authenticate(request, use_pkce=True, code='code', state='state', nonce='nonce', code_verifier='code_verifier') == 'a user'
         authenticate_oauth2.assert_called_once_with(request, True, 'code', 'state', 'nonce', 'code_verifier')
 
+    def test_build_token_request_params_without_pkce_without_secret(self, rf, settings):
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = ''
+        request = rf.get('/api/protected_resource')
+        request.build_absolute_uri = lambda uri: uri
+        params = AuthenticationBackend().build_token_request_params(request, False, 'a_code', '123abc')
+        assert params == {
+            'grant_type': 'authorization_code',
+            'client_id': 'a_client_id',
+            'client_secret': '',
+            'redirect_uri': '/oidc/callback',
+            'code': 'a_code',
+        }
+
+    def test_build_token_request_params_without_pkce_with_secret(self, rf, settings):
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        request = rf.get('/api/protected_resource')
+        request.build_absolute_uri = lambda uri: uri
+        params = AuthenticationBackend().build_token_request_params(request, False, 'a_code', '123abc')
+        assert params == {
+            'grant_type': 'authorization_code',
+            'client_id': 'a_client_id',
+            'client_secret': 'a_client_secret',
+            'redirect_uri': '/oidc/callback',
+            'code': 'a_code',
+        }
+
+    def test_build_token_request_params_with_pkce_without_secret(self, rf, settings):
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = ''
+        request = rf.get('/api/protected_resource')
+        request.build_absolute_uri = lambda uri: uri
+        params = AuthenticationBackend().build_token_request_params(request, True, 'a_code', '123abc')
+        assert params == {
+            'grant_type': 'authorization_code',
+            'client_id': 'a_client_id',
+            'redirect_uri': '/oidc/callback',
+            'code': 'a_code',
+            'code_verifier': '123abc',
+        }
+
+    def test_build_token_request_params_with_pkce_with_secret(self, rf, settings):
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        request = rf.get('/api/protected_resource')
+        request.build_absolute_uri = lambda uri: uri
+        params = AuthenticationBackend().build_token_request_params(request, True, 'a_code', '123abc')
+        assert params == {
+            'grant_type': 'authorization_code',
+            'client_id': 'a_client_id',
+            'redirect_uri': '/oidc/callback',
+            'code': 'a_code',
+            'code_verifier': '123abc',
+        }
+
+    def test_build_token_request_params_with_pkce_with_secret_forced(self, rf, settings):
+        settings.OIDC_RP_CLIENT_ID = 'a_client_id'
+        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        settings.OIDC_RP_FORCE_SECRET_WITH_PKCE = True
+        request = rf.get('/api/protected_resource')
+        request.build_absolute_uri = lambda uri: uri
+        params = AuthenticationBackend().build_token_request_params(request, True, 'a_code', '123abc')
+        assert params == {
+            'grant_type': 'authorization_code',
+            'client_id': 'a_client_id',
+            'client_secret': 'a_client_secret',
+            'redirect_uri': '/oidc/callback',
+            'code': 'a_code',
+            'code_verifier': '123abc',
+        }
+
     @patch('oauth2_authcodeflow.auth.request_post')
     def test_authenticate_oauth2_return_none(self, request_post, frozen_datetime, caplog, db, rf, sf, settings):
         request_post.return_value.status_code = 400
@@ -365,7 +437,6 @@ class TestAuthenticationBackend:
             data={
                 'grant_type': 'authorization_code',
                 'client_id': settings.OIDC_RP_CLIENT_ID,
-                'client_secret': settings.OIDC_RP_CLIENT_SECRET,
                 'redirect_uri': '/oidc/callback',
                 'code': 'code',
                 'code_verifier': 'verifier',
@@ -410,7 +481,6 @@ class TestAuthenticationBackend:
             data={
                 'grant_type': 'authorization_code',
                 'client_id': settings.OIDC_RP_CLIENT_ID,
-                'client_secret': settings.OIDC_RP_CLIENT_SECRET,
                 'redirect_uri': '/oidc/callback',
                 'code': 'code',
                 'code_verifier': 'verifier',
@@ -432,7 +502,7 @@ class TestAuthenticationBackend:
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_claims')
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_and_decode_id_token')
     @patch('oauth2_authcodeflow.auth.request_post')
-    def test_authenticate_oauth2_return_user_with_pkce_no_secret(
+    def test_authenticate_oauth2_return_user_with_pkce_force_secret(
         self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user,
         frozen_datetime, caplog, db, rf, sf, settings
     ):
@@ -442,7 +512,8 @@ class TestAuthenticationBackend:
             'access_token': 'ACCESS_TOKEN',
         }
         settings.OIDC_RP_CLIENT_ID = 'a_client_id'
-        settings.OIDC_RP_CLIENT_SECRET = ''
+        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        settings.OIDC_RP_FORCE_SECRET_WITH_PKCE = True
         settings.OIDC_RP_SCOPES = ['openid', 'email', 'profile', 'offline_access']
         settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS = 7 * 86400
         access_expires_at = int(frozen_datetime.fake_utcnow.timestamp()) + 2 * 60
@@ -465,6 +536,7 @@ class TestAuthenticationBackend:
             data={
                 'grant_type': 'authorization_code',
                 'client_id': settings.OIDC_RP_CLIENT_ID,
+                'client_secret': settings.OIDC_RP_CLIENT_SECRET,
                 'redirect_uri': '/oidc/callback',
                 'code': 'code',
                 'code_verifier': 'verifier',
@@ -498,7 +570,7 @@ class TestAuthenticationBackend:
             'refresh_token': 'REFRESH_TOKEN',
         }
         settings.OIDC_RP_CLIENT_ID = 'a_client_id'
-        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        settings.OIDC_RP_CLIENT_SECRET = ''
         settings.OIDC_RP_SCOPES = ['openid', 'email', 'profile', 'offline_access']
         settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS = 7 * 86400
         access_expires_at = int(frozen_datetime.fake_utcnow.timestamp()) + 2 * 60
@@ -521,7 +593,6 @@ class TestAuthenticationBackend:
             data={
                 'grant_type': 'authorization_code',
                 'client_id': settings.OIDC_RP_CLIENT_ID,
-                'client_secret': settings.OIDC_RP_CLIENT_SECRET,
                 'redirect_uri': '/oidc/callback',
                 'code': 'code',
                 'code_verifier': 'verifier',

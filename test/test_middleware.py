@@ -321,6 +321,7 @@ class TestRefreshAccessTokenMiddleware:
     def test_check_access_token(self, request_post, BlacklistedToken, is_refreshable_url, db, rf, sf, frozen_datetime, settings):
         settings.OIDC_RP_CLIENT_ID = 'client_id'
         settings.OIDC_RP_CLIENT_SECRET = 'client_secret'
+        settings.OIDC_RP_FORCE_SECRET_WITH_PKCE = True
         settings.OIDC_RP_USE_PKCE = True
         request_post.return_value.json.return_value = {
             'access_token': '456789',
@@ -378,7 +379,7 @@ class TestRefreshAccessTokenMiddleware:
         BlacklistedToken.blacklist.assert_not_called()
         # case expired, different id token
         # without client secret
-        settings.OIDC_RP_CLIENT_SECRET = None
+        settings.OIDC_RP_FORCE_SECRET_WITH_PKCE = False
         session = sf(request)
         session[constants.SESSION_ID_TOKEN] = 'abc123'
         session[constants.SESSION_REFRESH_TOKEN] = '13579'
@@ -402,6 +403,7 @@ class TestRefreshAccessTokenMiddleware:
         # case refresh is denied by OP
         # not using PKCE nor client secret
         settings.OIDC_RP_USE_PKCE = False
+        settings.OIDC_RP_CLIENT_SECRET = None
         request_post.reset_mock()
         request_post.return_value.__bool__.return_value = False
         session = sf(request)

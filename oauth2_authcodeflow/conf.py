@@ -69,10 +69,13 @@ DEFAULTS: Dict[str, Tuple[Any, Any]] = {
     'OIDC_OP_EXPECTED_CLAIMS': (list, []),
     # OpenID Connect client ID provided for your Relaying Party/client by your OpenIdConnect Provider
     'OIDC_RP_CLIENT_ID': (str, ImproperlyConfigured),
-    # OpenID Connect client secret provided for your Relaying Party/client by your OpenIdConnect Provider. Could be empty in PKCE case.
+    # OpenID Connect client secret provided for your Relaying Party/client by your OpenIdConnect Provider.
+    # Could be empty in PKCE case.
     'OIDC_RP_CLIENT_SECRET': (str, ImproperlyConfigured),
     # `PKCE` improve security, disable it only if your provider cannot handle it.
     'OIDC_RP_USE_PKCE': (bool, True),
+    # Force to send the client secret even when using `PKCE`. Only use this option if your provider don’t support PKCE without secret.
+    'OIDC_RP_FORCE_SECRET_WITH_PKCE': (bool, False),
     # Force to ask for consent on login, even if `offline_access` is not in scopes
     'OIDC_RP_FORCE_CONSENT_PROMPT': (bool, False),
     # The OpenID Connect scopes to request during login.
