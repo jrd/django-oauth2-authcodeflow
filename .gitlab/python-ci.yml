@@ -18,6 +18,7 @@
           chown test: $PIP_CACHE_DIR
         fi
         exec su test -c /bin/bash
+    pull_policy: ["always", "if-not-present"]
   variables:
     PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   cache:
