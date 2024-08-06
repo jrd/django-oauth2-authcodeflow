@@ -360,14 +360,18 @@ class TestAuthenticationBackend:
         assert authentication.authenticate_oauth2(request, True, '', 'state', 'nonce', 'verifier') is None
         assert authentication.authenticate_oauth2(request, True, 'code', 'state', 'nonce', None) is None
         assert authentication.authenticate_oauth2(request, True, 'code', 'state', 'nonce', 'verifier') is None
-        request_post.assert_called_once_with('token_url', data={
-            'grant_type': 'authorization_code',
-            'client_id': settings.OIDC_RP_CLIENT_ID,
-            'client_secret': settings.OIDC_RP_CLIENT_SECRET,
-            'redirect_uri': '/oidc/callback',
-            'code': 'code',
-            'code_verifier': 'verifier',
-        })
+        request_post.assert_called_once_with(
+            'token_url',
+            data={
+                'grant_type': 'authorization_code',
+                'client_id': settings.OIDC_RP_CLIENT_ID,
+                'client_secret': settings.OIDC_RP_CLIENT_SECRET,
+                'redirect_uri': '/oidc/callback',
+                'code': 'code',
+                'code_verifier': 'verifier',
+            },
+            headers={'origin': '/oidc/callback'},
+        )
 
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.get_or_create_user')
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_claims')
@@ -401,14 +405,18 @@ class TestAuthenticationBackend:
         session.save()
         request.build_absolute_uri = lambda uri: uri
         assert authentication.authenticate_oauth2(request, True, 'code', 'state', 'nonce', 'verifier') == 'user'
-        request_post.assert_called_once_with('token_url', data={
-            'grant_type': 'authorization_code',
-            'client_id': settings.OIDC_RP_CLIENT_ID,
-            'client_secret': settings.OIDC_RP_CLIENT_SECRET,
-            'redirect_uri': '/oidc/callback',
-            'code': 'code',
-            'code_verifier': 'verifier',
-        })
+        request_post.assert_called_once_with(
+            'token_url',
+            data={
+                'grant_type': 'authorization_code',
+                'client_id': settings.OIDC_RP_CLIENT_ID,
+                'client_secret': settings.OIDC_RP_CLIENT_SECRET,
+                'redirect_uri': '/oidc/callback',
+                'code': 'code',
+                'code_verifier': 'verifier',
+            },
+            headers={'origin': '/oidc/callback'},
+        )
         assert dict(session.items()) == {
             constants.SESSION_OP_TOKEN_URL: 'token_url',
             constants.SESSION_ID_TOKEN: 'ID_TOKEN',
@@ -452,13 +460,17 @@ class TestAuthenticationBackend:
         session.save()
         request.build_absolute_uri = lambda uri: uri
         assert authentication.authenticate_oauth2(request, True, 'code', 'state', 'nonce', 'verifier') == 'user'
-        request_post.assert_called_once_with('token_url', data={
-            'grant_type': 'authorization_code',
-            'client_id': settings.OIDC_RP_CLIENT_ID,
-            'redirect_uri': '/oidc/callback',
-            'code': 'code',
-            'code_verifier': 'verifier',
-        })
+        request_post.assert_called_once_with(
+            'token_url',
+            data={
+                'grant_type': 'authorization_code',
+                'client_id': settings.OIDC_RP_CLIENT_ID,
+                'redirect_uri': '/oidc/callback',
+                'code': 'code',
+                'code_verifier': 'verifier',
+            },
+            headers={'origin': '/oidc/callback'},
+        )
         assert dict(session.items()) == {
             constants.SESSION_OP_TOKEN_URL: 'token_url',
             constants.SESSION_ID_TOKEN: 'ID_TOKEN',
@@ -504,14 +516,18 @@ class TestAuthenticationBackend:
         session.save()
         request.build_absolute_uri = lambda uri: uri
         assert authentication.authenticate_oauth2(request, True, 'code', 'state', 'nonce', 'verifier') == 'user'
-        request_post.assert_called_once_with('token_url', data={
-            'grant_type': 'authorization_code',
-            'client_id': settings.OIDC_RP_CLIENT_ID,
-            'client_secret': settings.OIDC_RP_CLIENT_SECRET,
-            'redirect_uri': '/oidc/callback',
-            'code': 'code',
-            'code_verifier': 'verifier',
-        })
+        request_post.assert_called_once_with(
+            'token_url',
+            data={
+                'grant_type': 'authorization_code',
+                'client_id': settings.OIDC_RP_CLIENT_ID,
+                'client_secret': settings.OIDC_RP_CLIENT_SECRET,
+                'redirect_uri': '/oidc/callback',
+                'code': 'code',
+                'code_verifier': 'verifier',
+            },
+            headers={'origin': '/oidc/callback'},
+        )
         assert dict(session.items()) == {
             constants.SESSION_OP_TOKEN_URL: 'token_url',
             constants.SESSION_OP_JWKS: {'key_id': 'some_key'},
@@ -551,13 +567,17 @@ class TestAuthenticationBackend:
         session.save()
         request.build_absolute_uri = lambda uri: uri
         assert authentication.authenticate_oauth2(request, False, 'code', 'state', 'nonce', None) == 'user'
-        request_post.assert_called_once_with('token_url', data={
-            'grant_type': 'authorization_code',
-            'client_id': settings.OIDC_RP_CLIENT_ID,
-            'client_secret': settings.OIDC_RP_CLIENT_SECRET,
-            'redirect_uri': '/oidc/callback',
-            'code': 'code',
-        })
+        request_post.assert_called_once_with(
+            'token_url',
+            data={
+                'grant_type': 'authorization_code',
+                'client_id': settings.OIDC_RP_CLIENT_ID,
+                'client_secret': settings.OIDC_RP_CLIENT_SECRET,
+                'redirect_uri': '/oidc/callback',
+                'code': 'code',
+            },
+            headers={'origin': '/oidc/callback'},
+        )
         assert dict(session.items()) == {
             constants.SESSION_OP_TOKEN_URL: 'token_url',
             constants.SESSION_ID_TOKEN: 'ID_TOKEN',
@@ -595,13 +615,17 @@ class TestAuthenticationBackend:
         session.save()
         request.build_absolute_uri = lambda uri: uri
         assert authentication.authenticate_oauth2(request, False, 'code', 'state', 'nonce', None) == 'user'
-        request_post.assert_called_once_with('token_url', data={
-            'grant_type': 'authorization_code',
-            'client_id': settings.OIDC_RP_CLIENT_ID,
-            'client_secret': settings.OIDC_RP_CLIENT_SECRET,
-            'redirect_uri': '/oidc/callback',
-            'code': 'code',
-        })
+        request_post.assert_called_once_with(
+            'token_url',
+            data={
+                'grant_type': 'authorization_code',
+                'client_id': settings.OIDC_RP_CLIENT_ID,
+                'client_secret': settings.OIDC_RP_CLIENT_SECRET,
+                'redirect_uri': '/oidc/callback',
+                'code': 'code',
+            },
+            headers={'origin': '/oidc/callback'},
+        )
         assert dict(session.items()) == {
             constants.SESSION_OP_TOKEN_URL: 'token_url',
             constants.SESSION_ID_TOKEN: 'ID_TOKEN',

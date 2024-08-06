@@ -1,0 +1,1 @@
+- Azure tenant PKCE public app fix (Origin header was missing)

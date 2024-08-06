@@ -178,7 +178,11 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             # PKCE allows to have empty client secret, in that case the parameter should not be set.
             if not use_pkce or settings.OIDC_RP_CLIENT_SECRET:
                 params['client_secret'] = settings.OIDC_RP_CLIENT_SECRET or ''
-            resp = request_post(request.session[constants.SESSION_OP_TOKEN_URL], data=params)
+            resp = request_post(
+                request.session[constants.SESSION_OP_TOKEN_URL],
+                data=params,
+                headers=dict(origin=params['redirect_uri']),  # Some OP server require the Origin header when using PKCE
+            )
             if resp.status_code != 200:
                 raise SuspiciousOperation(f"{resp.status_code} {resp.text}")
             result = resp.json()
