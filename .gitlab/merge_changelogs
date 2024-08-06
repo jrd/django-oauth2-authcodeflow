@@ -7,7 +7,7 @@ default_changelog=$(cat <<EOF
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 EOF
@@ -20,13 +20,13 @@ if [ -n "$(find "$changelog_dir" -type f -name "*.$changelog_ext" 2>/dev/null)" 
     git add CHANGELOG.md
     pos=
   fi
-  [ -n "$pos" ] || pos=$(($(wc -l CHANGELOG.md) + 1))
+  [ -n "$pos" ] || pos=$(($(wc -l < CHANGELOG.md) + 1))
   next_ver=$(poetry version -s)
   newchlog=$(mktemp)
   (
     head -n$((pos - 1)) CHANGELOG.md
     echo "## $next_ver"
-    for category in Fixed Changed Added Removed; do
+    for category in Security Fixed Changed Added Removed Deprecated; do
       logs=$(find "$changelog_dir/$category" -type f -name "*.$changelog_ext" 2>/dev/null|sort)
       if [ -n "$logs" ]; then
         echo "### $category"
@@ -38,7 +38,7 @@ if [ -n "$(find "$changelog_dir" -type f -name "*.$changelog_ext" 2>/dev/null)" 
       fi
     done
     echo ''
-    tail -n+$pos CHANGELOG.md
+    tail "-n+$pos" CHANGELOG.md
   ) > "$newchlog"
   mv "$newchlog" CHANGELOG.md
   git add CHANGELOG.md

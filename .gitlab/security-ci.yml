@@ -5,17 +5,26 @@
   image:
     name: aquasec/trivy
     entrypoint: [""]
+    pull_policy: ["always", "if-not-present"]
   variables:
     TRIVY_NO_PROGRESS: "true"
     TRIVY_EXIT_CODE: 1
     TRIVY_SEVERITY: "HIGH,CRITICAL"
     TRIVY_IGNORE_UNFIXED: "true"
-    TRIVY_SECURITY_CHECKS: "vuln"
+    TRIVY_SCANNERS: "vuln"
     TRIVY_CACHE_DIR: ".trivycache/"
+    TRIVY_IGNOREFILE: ".trivyignore"
+    TRIVY_IGNORE_CVE: ""
   cache:
     paths:
       - .trivycache/
   script:
-    - 'trivy image --clear-cache'
+    - |
+      echo "" > ".trivyignore"
+      if [ -n "$TRIVY_IGNORE_CVE" ]; then
+        for cve in $TRIVY_IGNORE_CVE; do
+          echo "$cve" >> ".trivyignore"
+        done
+      fi
     - 'trivy image --download-db-only'
     - 'trivy fs "$CI_PROJECT_DIR"'
