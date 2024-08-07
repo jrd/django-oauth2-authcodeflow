@@ -1,1 +1,0 @@
-- Final fix for mysql on InnoDB with max key of 3072 by having the constraint as a lonely migration (github #21). Thanks Jurymax99 for the suggested merge request.

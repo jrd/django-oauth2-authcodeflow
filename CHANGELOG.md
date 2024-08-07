@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.2.0
+### Security
+- Security package upgrades
+### Fixed
+- Azure tenant PKCE public app fix (Origin header was missing)
+- Final fix for mysql on InnoDB with max key of 3072 by having the constraint as a lonely migration (github #21). Thanks Jurymax99 for the suggested merge request.
+- Allow to logout even when using the Django `ModelBackend` (github #25)
+### Changed
+- Do not send the client secret, even if defined, with `PKCE` by default (github #18)
+  This can be overriden with the `OIDC_RP_FORCE_SECRET_WITH_PKCE` parameter.
+- Gitlab CI upgrades
+
 ## 1.1.0
 ### Fixed
 - redirect after total logout could happen with a GET (#10)
