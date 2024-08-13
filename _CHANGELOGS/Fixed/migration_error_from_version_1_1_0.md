@@ -1,0 +1,1 @@
+- Fix a migration error from version `1.1.0` on a non-empty database (gitlab #26).

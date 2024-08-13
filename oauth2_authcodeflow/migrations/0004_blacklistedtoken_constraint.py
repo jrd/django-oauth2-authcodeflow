@@ -2,7 +2,7 @@ from django.db import (
     migrations,
     models,
 )
-from django.db.utils import OperationalError
+from django.db.utils import OperationalError, ProgrammingError
 
 
 class Migration(migrations.Migration):
@@ -22,6 +22,9 @@ class Migration(migrations.Migration):
             super().apply(project_state, *args, **kwargs)
         except OperationalError:
             # Mysql: Specified key was too long; max key length is 3072 bytes
-            # => fake the migration
-            pass
+            pass  # => fake the migration
+        except ProgrammingError:
+            # constraint already exists.
+            # That can happen with an update from library version 1.1.0 on an non-empty database.
+            pass  # => fake the migration
         return project_state
