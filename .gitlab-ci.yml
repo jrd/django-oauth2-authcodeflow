@@ -14,25 +14,75 @@ security:
   extends: .security
 secret:
   extends: .secret
+
 linter:
   extends: .linter
+linter:3.10:
+  extends: .linter
+  image:
+    name: python:3.10
+linter:3.11:
+  extends: .linter
+  image:
+    name: python:3.11
+linter:3.12:
+  extends: .linter
+  image:
+    name: python:3.12
+
 type_checker:
   extends: .type_checker
+type_checker:3.10:
+  extends: .type_checker
+  image:
+    name: python:3.10
+type_checker:3.11:
+  extends: .type_checker
+  image:
+    name: python:3.11
+type_checker:3.12:
+  extends: .type_checker
+  image:
+    name: python:3.12
+
 unit_tests:
   extends: .unit_tests
+unit_tests:3.10:
+  extends: .unit_tests
+  image:
+    name: python:3.10
+unit_tests:3.11:
+  extends: .unit_tests
+  image:
+    name: python:3.11
+unit_tests:3.12:
+  extends: .unit_tests
+  image:
+    name: python:3.12
+
 .tag_base:
   extends: .tag
   needs:
     - security
     - secret
     - linter
+    - linter:3.10
+    - linter:3.11
+    - linter:3.12
     - type_checker
+    - type_checker:3.10
+    - type_checker:3.11
+    - type_checker:3.12
     - unit_tests
+    - unit_tests:3.10
+    - unit_tests:3.11
+    - unit_tests:3.12
 tag:major:
   extends: .tag_base
 tag:minor:
   extends: .tag_base
 tag:patch:
   extends: .tag_base
+
 publish:
   extends: .publish

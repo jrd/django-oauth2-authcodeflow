@@ -6,7 +6,6 @@ authors = ["Cyrille Pontvieux <cpontvieux@systra.com>"]
 maintainers = ["Cyrille Pontvieux <cyrille@enialis.net>"]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/jrd/django-oauth2-authcodeflow"
 repository = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow"
 documentation = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/blob/master/README.md"
 keywords = ["oauth2", "oidc", "openid"]
@@ -25,6 +24,7 @@ classifiers = [
     "Framework :: Django",
     "Framework :: Django :: 4.2",
     "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
     "Topic :: Internet :: WWW/HTTP :: Session",
     "Topic :: Security",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -34,9 +34,13 @@ packages = [{include = "oauth2_authcodeflow"}]
 include = ["CHANGELOG.md", "OP.md"]
 
 [tool.poetry.urls]
+# https://github.com/pypi/warehouse/blob/main/warehouse/templates/packaging/detail.html#L20
 "Bug Tracker" = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/issues"
 "Merge Requests" = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/merge_requests"
 "Changelog" = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/blob/master/CHANGELOG.md"
+"Contributing" = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/blob/master/CONTRIBUTING.md"
+# Any Github url will be used for stats
+"Github mirror" = "https://github.com/jrd/django-oauth2-authcodeflow"
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -71,9 +75,6 @@ django_find_project = "false" # do not rely on manage.py file presence
 pythonpath = "." # indicate the root path
 django_debug_mode = "keep" # respect debug mode in test settings
 DJANGO_SETTINGS_MODULE = "test.settings"
-filterwarnings = [
-    "ignore:datetime.datetime.utcfromtimestamp:DeprecationWarning",
-]
 junit_family = "xunit2"
 junit_logging = "all"
 addopts = [

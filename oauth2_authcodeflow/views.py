@@ -159,7 +159,7 @@ class AuthenticateView(CacheBaseView, UrlParamsMixin):
         if from_cli:
             # special cases when the request comes from CLI,
             # a redirect will not be usefull, only the redirect location is required.
-            return HttpResponse(f"Go to:\n{redirect_url}\n", content_type='text/plain')
+            return HttpResponse(f"Go to:\n{redirect_url}\n", content_type='text/plain')  # noqa: E231
         else:
             return HttpResponseRedirect(redirect_url)
 
@@ -236,7 +236,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
             raise BadRequestException(f"Error: {error_message}")
         authorization_prefix = settings.OIDC_AUTHORIZATION_HEADER_PREFIX
         id_token = request.session[constants.SESSION_ID_TOKEN]
-        return HttpResponse(f"Header:\n  Authorization: {authorization_prefix} {id_token}\n", content_type='text/plain')
+        return HttpResponse(f"Header:\n  Authorization: {authorization_prefix} {id_token}\n", content_type='text/plain')  # noqa: E231
 
     def build_response_from_http(self, request: HttpRequest, url: str) -> HttpResponse:
         return HttpResponseRedirect(url)
