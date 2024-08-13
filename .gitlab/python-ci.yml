@@ -10,13 +10,8 @@
         poetry config virtualenvs.in-project true
         poetry config cache-dir $PIP_CACHE_DIR
         useradd -m test
-        chown -R test: /builds
-        if [ -e $PIP_CACHE_DIR ]; then
-          chown -R test: $PIP_CACHE_DIR
-        else
-          mkdir -p $PIP_CACHE_DIR
-          chown test: $PIP_CACHE_DIR
-        fi
+        mkdir -p $PIP_CACHE_DIR
+        chown -R test: $CI_BUILDS_DIR $PIP_CACHE_DIR
         exec su test -c /bin/bash
     pull_policy: ["always", "if-not-present"]
   variables:
