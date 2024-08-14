@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.2.1
+### Fixed
+- Fix a migration error from version `1.1.0` on a non-empty database (gitlab #26).
+### Added
+- Explicit compatibility with django 5.1
+
 ## 1.2.0
 ### Security
 - Security package upgrades
