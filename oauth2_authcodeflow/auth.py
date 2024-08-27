@@ -195,7 +195,7 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             resp = request_post(
                 request.session[constants.SESSION_OP_TOKEN_URL],
                 data=params,
-                headers=dict(origin=params['redirect_uri']),  # Some OP server require the Origin header when using PKCE
+                headers=dict(origin=params['redirect_uri']) if settings.OIDC_RP_AZURE_SPA else None,
             )
             if resp.status_code != 200:
                 raise SuspiciousOperation(f"{resp.status_code} {resp.text}")

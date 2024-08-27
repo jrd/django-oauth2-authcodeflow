@@ -78,6 +78,8 @@ DEFAULTS: Dict[str, Tuple[Any, Any]] = {
     'OIDC_RP_FORCE_SECRET_WITH_PKCE': (bool, False),
     # Force to ask for consent on login, even if `offline_access` is not in scopes
     'OIDC_RP_FORCE_CONSENT_PROMPT': (bool, False),
+    # Some OP server (Azure) require the 'Origin' header when using PKCE and SPA (single page application)
+    'OIDC_RP_AZURE_SPA': (bool, False),
     # The OpenID Connect scopes to request during login.
     # The scopes could be usefull later to get access to other ressources.
     # `openid` must be in the list.

@@ -167,6 +167,7 @@ Specific OIDC settings:
 | `OIDC_RP_USE_PKCE` | `PKCE` improve security, disable it only if your provider cannot handle it. | `True` |
 | `OIDC_RP_FORCE_SECRET_WITH_PKCE` | Force to send the client secret even when using `PKCE`.<br>Only use this option if your provider don’t support PKCE without secret. | `False` |
 | `OIDC_RP_FORCE_CONSENT_PROMPT` | Force to ask for consent on login, even if `offline_access` is not in scopes | `False` |
+| `OIDC_RP_AZURE_SPA` | Azure require the 'Origin' header when using PKCE and SPA | `False` |
 | `OIDC_RP_SCOPES` | The OpenID Connect scopes to request during login.<br>The scopes could be usefull later to get access to other ressources.<br>`openid` must be in the list.<br>You can also include the `email` scope to ensure that the email field will be in the claims (*recommended*).<br>You can also include the `profile` scope to get more (like names, …) info in the `id_token` (*recommended*).<br>You can also get a `refresh_token` by specifying the `offline_access` scope. | `['openid', 'email', 'profile', 'offline_access']` |
 | `OIDC_RP_USERINFO_CLAIMS` | OpenID Connect authorization [request parameter `userinfo` member](https://openid.net/specs/openid-connect-core-1_0.html#ClaimsParameter) to optionaly add to id token request (dict type). | `None` |
 | `OIDC_RP_TOKEN_CLAIMS` | OpenID Connect authorization [request parameter `id_token` member](https://openid.net/specs/openid-connect-core-1_0.html#ClaimsParameter) to optionaly add to id token request (dict type). | `None` |
