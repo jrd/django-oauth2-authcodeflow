@@ -1,1 +1,0 @@
-- 'Origin' header should NOT be present if the Azure app is not a SPA.

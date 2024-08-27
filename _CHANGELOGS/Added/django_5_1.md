@@ -1,1 +1,0 @@
-- Explicit compatibility with django 5.1
