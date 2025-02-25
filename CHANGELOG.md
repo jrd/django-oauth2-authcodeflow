@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.2.3
+### Changed
+- Security update for `python-jose` from version `3.3.0` to `3.4.0`
+
 ## 1.2.2
 ### Fixed
 - 'Origin' header should NOT be present if the Azure app is not a SPA.

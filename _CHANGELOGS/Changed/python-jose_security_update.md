@@ -1,1 +1,0 @@
-- Security update for `python-jose` from version `3.3.0` to `3.4.0`
