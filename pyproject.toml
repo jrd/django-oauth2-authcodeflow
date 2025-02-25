@@ -21,10 +21,12 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Framework :: Django",
     "Framework :: Django :: 4.2",
     "Framework :: Django :: 5.0",
     "Framework :: Django :: 5.1",
+    "Framework :: Django :: 5.2",
     "Topic :: Internet :: WWW/HTTP :: Session",
     "Topic :: Security",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -43,6 +45,7 @@ include = ["CHANGELOG.md", "OP.md"]
 "Github mirror" = "https://github.com/jrd/django-oauth2-authcodeflow"
 
 [tool.poetry.dependencies]
+# https://docs.djangoproject.com/en/dev/faq/install/#faq-python-version-support
 python = "^3.8"
 django = ">=4.2"
 python-jose = {extras = ["cryptography"], version = ">=3.3"}
