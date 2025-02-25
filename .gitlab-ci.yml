@@ -42,6 +42,7 @@ type_checker:
 
 unit_tests:
   extends: .unit_tests
+  image:
     name: python:$PY_VERSION
   parallel:
     matrix:
