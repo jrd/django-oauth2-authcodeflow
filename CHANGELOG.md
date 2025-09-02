@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.3.0
+### Changed
+- Python 3.13, Django 5.2 compat
+### Added
+- Allow to force to not ask for consent
+
 ## 1.2.3
 ### Changed
 - Security update for `python-jose` from version `3.3.0` to `3.4.0`

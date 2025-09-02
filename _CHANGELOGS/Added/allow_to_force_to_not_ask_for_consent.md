@@ -1,1 +1,0 @@
-- Allow to force to not ask for consent
