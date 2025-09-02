@@ -199,6 +199,7 @@ class TestAuthenticateView:
         view = AuthenticateView()
         settings.OIDC_RP_CLIENT_ID = 'test client_id'
         settings.OIDC_RP_FORCE_CONSENT_PROMPT = True
+        settings.OIDC_RP_FORCE_NO_CONSENT_PROMPT = False
         get_claims_parameter.return_value = None
 
         def fill_params(session_updates, auth_params, new_session_updates, new_auth_params):
@@ -231,6 +232,7 @@ class TestAuthenticateView:
         fill_params_without_pkce.assert_called_once()
         fill_params_without_pkce.reset_mock()
         settings.OIDC_RP_FORCE_CONSENT_PROMPT = False
+        settings.OIDC_RP_FORCE_NO_CONSENT_PROMPT = False
         assert view.get_auth_params(request, True, False, ['openid', 'email', 'offline_access']) == (
             {constants.SESSION_STATE: 'test state', constants.SESSION_NONCE: 'test nonce'},
             {
@@ -249,6 +251,27 @@ class TestAuthenticateView:
         fill_params_for_pkce.reset_mock()
         fill_params_without_pkce.assert_called_once()
         fill_params_without_pkce.reset_mock()
+        settings.OIDC_RP_FORCE_CONSENT_PROMPT = False
+        settings.OIDC_RP_FORCE_NO_CONSENT_PROMPT = True
+        assert view.get_auth_params(request, True, False, ['openid', 'email', 'offline_access']) == (
+            {constants.SESSION_STATE: 'test state', constants.SESSION_NONCE: 'test nonce'},
+            {
+                'response_type': 'code',
+                'client_id': 'test client_id',
+                'scope': 'openid email offline_access',
+                'redirect_uri': 'http://testserver/oidc/callback',
+                'state': 'test state',
+                'nonce': 'test nonce',
+            },
+        )
+        get_claims_parameter.assert_called_once_with(request)
+        get_claims_parameter.reset_mock()
+        fill_params_for_pkce.assert_not_called()
+        fill_params_for_pkce.reset_mock()
+        fill_params_without_pkce.assert_called_once()
+        fill_params_without_pkce.reset_mock()
+        settings.OIDC_RP_FORCE_CONSENT_PROMPT = False
+        settings.OIDC_RP_FORCE_NO_CONSENT_PROMPT = False
         assert view.get_auth_params(request, False, True, ['openid', 'email']) == (
             {constants.SESSION_CHALLENGE: 'challenge'},
             {
