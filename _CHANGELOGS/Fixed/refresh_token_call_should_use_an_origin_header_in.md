@@ -1,1 +1,0 @@
-- Refresh token call should use an origin header in Azure SPA
