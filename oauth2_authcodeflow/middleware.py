@@ -251,7 +251,13 @@ class RefreshAccessTokenMiddleware(Oauth2MiddlewareMixin):
         # PKCE allows to have empty client secret, in that case the parameter should not be set.
         if not settings.OIDC_RP_USE_PKCE or settings.OIDC_RP_FORCE_SECRET_WITH_PKCE:
             params['client_secret'] = settings.OIDC_RP_CLIENT_SECRET or ''
-        resp = request_post(request.session[constants.SESSION_OP_TOKEN_URL], data=params)
+        resp = request_post(
+            request.session[constants.SESSION_OP_TOKEN_URL],
+            data=params,
+            headers=dict(
+                origin=request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
+            ) if settings.OIDC_RP_AZURE_SPA else None,
+        )
         if not resp:
             logger.error(resp.text)
             raise MiddlewareException(resp.text)

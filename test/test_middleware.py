@@ -322,6 +322,7 @@ class TestRefreshAccessTokenMiddleware:
         settings.OIDC_RP_CLIENT_ID = 'client_id'
         settings.OIDC_RP_CLIENT_SECRET = 'client_secret'
         settings.OIDC_RP_FORCE_SECRET_WITH_PKCE = True
+        settings.OIDC_RP_AZURE_SPA = False
         settings.OIDC_RP_USE_PKCE = True
         request_post.return_value.json.return_value = {
             'access_token': '456789',
@@ -375,7 +376,7 @@ class TestRefreshAccessTokenMiddleware:
             client_id=settings.OIDC_RP_CLIENT_ID,
             client_secret=settings.OIDC_RP_CLIENT_SECRET,
             refresh_token='13579',
-        ))
+        ), headers=None)
         BlacklistedToken.blacklist.assert_not_called()
         # case expired, different id token
         # without client secret
@@ -398,8 +399,33 @@ class TestRefreshAccessTokenMiddleware:
             grant_type='refresh_token',
             client_id=settings.OIDC_RP_CLIENT_ID,
             refresh_token='13579',
-        ))
+        ), headers=None)
         BlacklistedToken.blacklist.assert_called_once_with('abc123')
+        BlacklistedToken.blacklist.reset_mock()
+        # case expired
+        # without client secret, with azure spa
+        settings.OIDC_RP_AZURE_SPA = True
+        session = sf(request)
+        session[constants.SESSION_ID_TOKEN] = 'abc123'
+        session[constants.SESSION_REFRESH_TOKEN] = '13579'
+        session[constants.SESSION_ACCESS_TOKEN] = '123456'
+        session[constants.SESSION_ACCESS_EXPIRES_AT] = expires_at
+        session[constants.SESSION_OP_TOKEN_URL] = 'token_url'
+        request_post.reset_mock()
+        request_post.return_value.json.return_value.update(id_token='abc456', refresh_token='24680')
+        middleware.check_access_token(request)
+        assert session.session_key is not None
+        assert session[constants.SESSION_ID_TOKEN] == 'abc456'
+        assert session[constants.SESSION_ACCESS_TOKEN] == '456789'
+        assert session[constants.SESSION_ACCESS_EXPIRES_AT] == expected_expires_at
+        assert session[constants.SESSION_REFRESH_TOKEN] == '24680'
+        request_post.assert_called_once_with('token_url', data=dict(
+            grant_type='refresh_token',
+            client_id=settings.OIDC_RP_CLIENT_ID,
+            refresh_token='13579',
+        ), headers=dict(origin='http://testserver/oidc/callback'))
+        BlacklistedToken.blacklist.assert_called_once_with('abc123')
+        settings.OIDC_RP_AZURE_SPA = False
         # case refresh is denied by OP
         # not using PKCE nor client secret
         settings.OIDC_RP_USE_PKCE = False
@@ -419,7 +445,7 @@ class TestRefreshAccessTokenMiddleware:
             client_id=settings.OIDC_RP_CLIENT_ID,
             client_secret='',
             refresh_token='13579',
-        ))
+        ), headers=None)
 
 
 class TestRefreshSessionMiddleware:
