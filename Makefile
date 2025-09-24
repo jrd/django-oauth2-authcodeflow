@@ -12,6 +12,13 @@
 	project \
 	build
 SHELL:=/bin/bash -eo pipefail -c
+# poetry is still <2.0 on python 3.8
+POETRY_INSTALL := $(shell \
+  if poetry --no-ansi --version | grep -q 'version 1'; then \
+    echo "poetry install --sync"; \
+  else \
+    echo "poetry sync"; \
+  fi)
 changelog_dir:=_CHANGELOGS
 changelog_ext:=md
 
@@ -37,13 +44,13 @@ clean:
 	@find . -type d -name __pycache__ -prune -exec rm -rf '{}' \;
 
 install_dev_deps:
-	@poetry install -n --sync --no-root --only=dev,typing
+	@$(POETRY_INSTALL) -n --no-root --only=dev,typing
 
 install_prod_deps:
-	@poetry install -n --sync --no-root --only=main
+	@$(POETRY_INSTALL) -n --no-root --only=main
 
 install_all_deps:
-	@poetry install -n --sync --no-root
+	@$(POETRY_INSTALL) -n --no-root
 
 reports:
 	@mkdir -p reports

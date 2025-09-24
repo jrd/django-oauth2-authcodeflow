@@ -14,10 +14,7 @@ from typing import (
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
-from django.contrib.auth.models import (
-    AbstractBaseUser,
-    AbstractUser,
-)
+from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import SuspiciousOperation
 from django.http.request import HttpRequest
 from django.urls import reverse
@@ -135,7 +132,7 @@ class AuthenticationMixin:
 
 
 class AuthenticationBackend(ModelBackend, AuthenticationMixin):
-    def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None, **kwargs) -> Optional[AbstractBaseUser]:
+    def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None, **kwargs) -> Optional[AbstractUser]:
         """Authenticates users using OpenID Connect Authorization code flow."""
         for url_pattern in settings.OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS:
             if search(url_pattern, request.path):
@@ -180,7 +177,7 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
         nonce: Optional[str],
         code_verifier: Optional[str],
         **kwargs,
-    ) -> Optional[AbstractBaseUser]:
+    ) -> Optional[AbstractUser]:
         """Authenticates users using OpenID Connect Authorization code flow."""
         if not request:
             return None
@@ -234,7 +231,7 @@ class BearerAuthenticationBackend(ModelBackend, AuthenticationMixin, OIDCUrlsMix
         self.authorization_prefix = settings.OIDC_AUTHORIZATION_HEADER_PREFIX
         self.oidc_urls = self.get_oidc_urls({})
 
-    def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None, **kwargs) -> Optional[AbstractBaseUser]:
+    def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None, **kwargs) -> Optional[AbstractUser]:
         """Authenticates users using the Authorization header and previous OIDC Id Token."""
         auth_header = request.headers.get('Authorization', '')
         prefix, id_token = auth_header.split(' ', 1) if ' ' in auth_header else ('', '')
