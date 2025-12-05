@@ -1,9 +1,7 @@
 from base64 import b64encode
-from datetime import (
-    datetime,
-    timedelta,
-    timezone,
-)
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 from json import dumps
 from re import escape
 from unittest.mock import patch
@@ -19,11 +17,9 @@ from jose import jwt
 from jose.utils import long_to_base64
 
 from oauth2_authcodeflow import constants
-from oauth2_authcodeflow.auth import (
-    AuthenticationBackend,
-    AuthenticationMixin,
-    BearerAuthenticationBackend,
-)
+from oauth2_authcodeflow.auth import AuthenticationBackend
+from oauth2_authcodeflow.auth import AuthenticationMixin
+from oauth2_authcodeflow.auth import BearerAuthenticationBackend
 from oauth2_authcodeflow.utils import OIDCUrlsMixin
 
 
@@ -41,10 +37,12 @@ def sf():
     Session factory
     takes a request as argument and create a session (not saved) on it
     """
+
     def session_factory(request):
         middleware = SessionMiddleware(lambda x: None)
         middleware.process_request(request)
         return request.session
+
     yield session_factory
 
 
@@ -174,7 +172,10 @@ class TestAuthenticationMixin:
             jwks={
                 '42': {'kid': '42', 'kty': 'RSA', 'alg': 'RS256', 'use': 'sig'},
                 '123': {
-                    'kid': '123', 'kty': 'RSA', 'alg': 'RS256', 'use': 'sig',
+                    'kid': '123',
+                    'kty': 'RSA',
+                    'alg': 'RS256',
+                    'use': 'sig',
                     'n': long_to_base64(rsa_public_numbers.n),
                     'e': long_to_base64(rsa_public_numbers.e),
                 },
@@ -449,8 +450,7 @@ class TestAuthenticationBackend:
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_and_decode_id_token')
     @patch('oauth2_authcodeflow.auth.request_post')
     def test_authenticate_oauth2_return_user_with_pkce_no_refresh(
-        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user,
-        frozen_datetime, caplog, db, rf, sf, settings
+        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user, frozen_datetime, caplog, db, rf, sf, settings
     ):
         request_post.return_value.status_code = 200
         request_post.return_value.json.return_value = {
@@ -503,8 +503,7 @@ class TestAuthenticationBackend:
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_and_decode_id_token')
     @patch('oauth2_authcodeflow.auth.request_post')
     def test_authenticate_oauth2_return_user_with_pkce_force_secret(
-        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user,
-        frozen_datetime, caplog, db, rf, sf, settings
+        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user, frozen_datetime, caplog, db, rf, sf, settings
     ):
         request_post.return_value.status_code = 200
         request_post.return_value.json.return_value = {
@@ -559,8 +558,7 @@ class TestAuthenticationBackend:
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_and_decode_id_token')
     @patch('oauth2_authcodeflow.auth.request_post')
     def test_authenticate_oauth2_return_user_with_pkce_with_refresh_and_exp(
-        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user,
-        frozen_datetime, caplog, db, rf, sf, settings
+        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user, frozen_datetime, caplog, db, rf, sf, settings
     ):
         request_post.return_value.status_code = 200
         request_post.return_value.json.return_value = {
@@ -614,8 +612,7 @@ class TestAuthenticationBackend:
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_and_decode_id_token')
     @patch('oauth2_authcodeflow.auth.request_post')
     def test_authenticate_oauth2_return_user_with_pkce_and_azure_spa(
-        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user,
-        frozen_datetime, caplog, db, rf, sf, settings
+        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user, frozen_datetime, caplog, db, rf, sf, settings
     ):
         request_post.return_value.status_code = 200
         request_post.return_value.json.return_value = {
@@ -669,8 +666,7 @@ class TestAuthenticationBackend:
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_and_decode_id_token')
     @patch('oauth2_authcodeflow.auth.request_post')
     def test_authenticate_oauth2_return_user_without_pkce(
-        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user,
-        frozen_datetime, caplog, db, rf, sf, settings
+        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user, frozen_datetime, caplog, db, rf, sf, settings
     ):
         request_post.return_value.status_code = 200
         request_post.return_value.json.return_value = {
@@ -717,8 +713,7 @@ class TestAuthenticationBackend:
     @patch('oauth2_authcodeflow.auth.AuthenticationBackend.validate_and_decode_id_token')
     @patch('oauth2_authcodeflow.auth.request_post')
     def test_authenticate_oauth2_return_user_without_pkce_no_secret(
-        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user,
-        frozen_datetime, caplog, db, rf, sf, settings
+        self, request_post, validate_and_decode_id_token, validate_claims, get_or_create_user, frozen_datetime, caplog, db, rf, sf, settings
     ):
         request_post.return_value.status_code = 200
         request_post.return_value.json.return_value = {
@@ -762,7 +757,7 @@ class TestAuthenticationBackend:
 
 
 class TestBearerAuthenticationBackend:
-    JWKS = {'123': {'kid': '123', 'kty': 'RSA', 'alg': 'RS512', 'use': 'sig', 'n': '5wkSa6CQ', 'e': 'AQAB'}},
+    JWKS = {'123': {'kid': '123', 'kty': 'RSA', 'alg': 'RS512', 'use': 'sig', 'n': '5wkSa6CQ', 'e': 'AQAB'}}
 
     @patch('oauth2_authcodeflow.auth.BearerAuthenticationBackend.get_oidc_urls')
     def test_init(self, get_oidc_urls, settings):

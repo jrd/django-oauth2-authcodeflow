@@ -1,41 +1,29 @@
-from datetime import (
-    datetime,
-    timezone,
-)
+from datetime import datetime
+from datetime import timezone
 from logging import getLogger
 from re import search
-from typing import (
-    Callable,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Callable
+from typing import Optional
+from typing import Tuple
+from typing import Union
 from urllib.parse import urlencode
 
-from django.contrib.auth import (
-    BACKEND_SESSION_KEY,
-    authenticate,
-)
+from django.contrib.auth import BACKEND_SESSION_KEY
+from django.contrib.auth import authenticate
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ImproperlyConfigured
-from django.http import (
-    HttpResponseRedirect,
-    JsonResponse,
-)
+from django.http import HttpResponseRedirect
+from django.http import JsonResponse
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
 from django.urls import reverse
 from django.utils.module_loading import import_string
 from requests import post as request_post
 
-from .auth import (
-    AuthenticationBackend,
-    BearerAuthenticationBackend,
-)
-from .conf import (
-    constants,
-    settings,
-)
+from .auth import AuthenticationBackend
+from .auth import BearerAuthenticationBackend
+from .conf import constants
+from .conf import settings
 from .models import BlacklistedToken
 
 logger = getLogger(__name__)
@@ -56,6 +44,7 @@ class Oauth2MiddlewareMixin:
     Each request call trigger a call to process_request which uses check_function to verify if oauth2 tokens are still ok.
     If not, a MiddlewareException should be raised and a redirection to login is realized or a json error returned.
     """
+
     get_response: GetResponseCallable
     token_type: Optional[str]
     check_function: Optional[CheckFunctionCallable]
@@ -66,7 +55,8 @@ class Oauth2MiddlewareMixin:
         self.token_type = token_type
         self.check_function = check_function
         self.exempt_urls = tuple(
-            f'^{reverse(url)}' for url in (
+            f'^{reverse(url)}'
+            for url in (
                 constants.OIDC_URL_AUTHENTICATION_NAME,
                 constants.OIDC_URL_CALLBACK_NAME,
                 constants.OIDC_URL_LOGOUT_NAME,
@@ -134,10 +124,7 @@ class Oauth2MiddlewareMixin:
             pass
 
     def is_api_request(self, request: HttpRequest) -> bool:
-        return any(
-            search(url_pattern, request.path)
-            for url_pattern in settings.OIDC_MIDDLEWARE_API_URL_PATTERNS
-        )
+        return any(search(url_pattern, request.path) for url_pattern in settings.OIDC_MIDDLEWARE_API_URL_PATTERNS)
 
     def json_401(self, request: HttpRequest, error: str) -> JsonResponse:
         """Return JSON response with Unauthorized HTTP error"""
@@ -145,10 +132,16 @@ class Oauth2MiddlewareMixin:
 
     def re_authent(self, request: HttpRequest, next_url: str, failure_url: str) -> HttpResponseRedirect:
         """Redirect to authentication page"""
-        return HttpResponseRedirect(reverse(constants.OIDC_URL_AUTHENTICATION_NAME) + '?' + urlencode({
-            settings.OIDC_REDIRECT_OK_FIELD_NAME: next_url,
-            settings.OIDC_REDIRECT_ERROR_FIELD_NAME: failure_url,
-        }))
+        return HttpResponseRedirect(
+            reverse(constants.OIDC_URL_AUTHENTICATION_NAME)
+            + '?'
+            + urlencode(
+                {
+                    settings.OIDC_REDIRECT_OK_FIELD_NAME: next_url,
+                    settings.OIDC_REDIRECT_ERROR_FIELD_NAME: failure_url,
+                }
+            )
+        )
 
     def re_authent_or_401(self, request: HttpRequest, error: str, next_url: str, failure_url: str) -> Union[JsonResponse, HttpResponseRedirect]:
         if self.is_api_request(request):
@@ -173,6 +166,7 @@ class LoginRequiredMiddleware(Oauth2MiddlewareMixin):
     Force a user to be logged-in to access all pages not listed in OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS.
     If OIDC_MIDDLEWARE_LOGIN_REQUIRED_REDIRECT is true (default), then redirect to login page if not authenticated.
     """
+
     def __init__(self, get_response: GetResponseCallable) -> None:
         super().__init__(get_response, 'id_token', self.check_login_required)
 
@@ -207,7 +201,7 @@ class LoginRequiredMiddleware(Oauth2MiddlewareMixin):
             try:
                 user = authenticate(request)
             except Exception as e:
-                raise MiddlewareException(str(e))
+                raise MiddlewareException(str(e)) from e
             if not user:
                 raise MiddlewareException("id token is missing, user is not authenticated")
         else:
@@ -220,6 +214,7 @@ class RefreshAccessTokenMiddleware(Oauth2MiddlewareMixin):
     For users authenticated with the OIDC RP, verify tokens are still valid and
     if not, force the user to refresh silently.
     """
+
     def __init__(self, get_response: GetResponseCallable) -> None:
         super().__init__(get_response, 'access_token', self.check_access_token)
 
@@ -236,8 +231,8 @@ class RefreshAccessTokenMiddleware(Oauth2MiddlewareMixin):
             # The id_token is still valid, so we don't have to do anything.
             logger.debug(
                 'access token is still valid (%s > %s)',
-                datetime.fromtimestamp(utc_expiration).strftime('%d/%m/%Y, %H:%M:%S'),
-                datetime.fromtimestamp(utc_now).strftime('%d/%m/%Y, %H:%M:%S'),
+                datetime.fromtimestamp(utc_expiration, tz=timezone.utc).strftime('%d/%m/%Y, %H:%M:%S'),
+                datetime.fromtimestamp(utc_now, tz=timezone.utc).strftime('%d/%m/%Y, %H:%M:%S'),
             )
             return
         logger.debug('access token has expired')
@@ -256,7 +251,9 @@ class RefreshAccessTokenMiddleware(Oauth2MiddlewareMixin):
             data=params,
             headers=dict(
                 origin=request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
-            ) if settings.OIDC_RP_AZURE_SPA else None,
+            )
+            if settings.OIDC_RP_AZURE_SPA
+            else None,
         )
         if not resp:
             logger.error(resp.text)
@@ -280,13 +277,13 @@ class RefreshSessionMiddleware(Oauth2MiddlewareMixin):
     """
     Checks if the session expired.
     """
+
     MIN_SECONDS = 10
 
     def __init__(self, get_response: GetResponseCallable) -> None:
         if not (self.MIN_SECONDS < settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS < settings.SESSION_COOKIE_AGE):
             raise ImproperlyConfigured(
-                "OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS should be less than SESSION_COOKIE_AGE"
-                f" and more than {self.MIN_SECONDS} seconds"
+                f"OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS should be less than SESSION_COOKIE_AGE and more than {self.MIN_SECONDS} seconds"
             )
         super().__init__(get_response, 'refresh_token', self.check_session)
 
@@ -305,8 +302,8 @@ class RefreshSessionMiddleware(Oauth2MiddlewareMixin):
             # The session is still valid, so we don't have to do anything.
             logger.debug(
                 'session is still valid (%s > %s)',
-                datetime.fromtimestamp(utc_expiration).strftime('%d/%m/%Y, %H:%M:%S'),
-                datetime.fromtimestamp(utc_now).strftime('%d/%m/%Y, %H:%M:%S'),
+                datetime.fromtimestamp(utc_expiration, tz=timezone.utc).strftime('%d/%m/%Y, %H:%M:%S'),
+                datetime.fromtimestamp(utc_now, tz=timezone.utc).strftime('%d/%m/%Y, %H:%M:%S'),
             )
             return
         # The session has expired, an authentication is now required
@@ -321,6 +318,7 @@ class BearerAuthMiddleware(Oauth2MiddlewareMixin):
     """
     Inject User in request if authenticate from header.
     """
+
     def __init__(self, get_response: GetResponseCallable) -> None:
         super().__init__(get_response, None, None)
 

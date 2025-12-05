@@ -1,30 +1,24 @@
 from re import escape
-from unittest.mock import (
-    MagicMock,
-    patch,
-)
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 from django.contrib.sessions.backends.base import SessionBase
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import SuspiciousOperation
-from django.http import (
-    HttpResponse,
-    HttpResponseRedirect,
-)
+from django.http import HttpResponse
+from django.http import HttpResponseRedirect
 from jose.exceptions import JWTError
 
 from oauth2_authcodeflow import constants
-from oauth2_authcodeflow.views import (
-    AuthenticateView,
-    BadRequestException,
-    CacheBaseView,
-    CallbackView,
-    LogoutByOPView,
-    LogoutView,
-    TotalLogoutView,
-    UrlParamsMixin,
-)
+from oauth2_authcodeflow.views import AuthenticateView
+from oauth2_authcodeflow.views import BadRequestException
+from oauth2_authcodeflow.views import CacheBaseView
+from oauth2_authcodeflow.views import CallbackView
+from oauth2_authcodeflow.views import LogoutByOPView
+from oauth2_authcodeflow.views import LogoutView
+from oauth2_authcodeflow.views import TotalLogoutView
+from oauth2_authcodeflow.views import UrlParamsMixin
 
 
 @pytest.fixture

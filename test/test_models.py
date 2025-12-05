@@ -1,8 +1,6 @@
-from datetime import (
-    datetime,
-    timedelta,
-    timezone,
-)
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 
 import pytest
 from freezegun import freeze_time

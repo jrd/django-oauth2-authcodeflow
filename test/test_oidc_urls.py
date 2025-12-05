@@ -2,10 +2,8 @@ from io import StringIO
 from re import escape
 
 import pytest
-from django.core.management import (
-    CommandError,
-    call_command,
-)
+from django.core.management import CommandError
+from django.core.management import call_command
 
 
 def test_oidc_urls_parser(settings):

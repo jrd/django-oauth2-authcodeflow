@@ -1,7 +1,10 @@
 root = true
 
-[*.py]
+[*]
 indent_style = space
-indent_size = 4
+indent_size = 2
 line_length = 160
+
+[*.py]
+indent_size = 4
 skip_gitignore = true

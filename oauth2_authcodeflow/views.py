@@ -3,23 +3,19 @@ from base64 import urlsafe_b64encode
 from hashlib import sha256
 from importlib import import_module
 from logging import getLogger
-from typing import (
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
-)
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Type
 from urllib.parse import parse_qs
 
 from django.contrib import auth
 from django.contrib.sessions.backends.base import SessionBase
 from django.core.exceptions import SuspiciousOperation
-from django.http import (
-    HttpResponse,
-    HttpResponseBadRequest,
-    HttpResponseRedirect,
-)
+from django.http import HttpResponse
+from django.http import HttpResponseBadRequest
+from django.http import HttpResponseRedirect
 from django.http.request import HttpRequest
 from django.urls import reverse
 from django.utils.crypto import get_random_string
@@ -30,10 +26,8 @@ from django.views.generic import View
 from jose import jwt
 from jose.exceptions import JWTError
 
-from .conf import (
-    constants,
-    settings,
-)
+from .conf import constants
+from .conf import settings
 from .models import BlacklistedToken
 from .utils import OIDCUrlsMixin
 
@@ -77,6 +71,7 @@ class AuthenticateView(CacheBaseView, UrlParamsMixin):
     Using at least the openid scope (OIDC).
     Ends with a redirect.
     """
+
     http_method_names = ['get']
 
     def get_from_cli(self, request: HttpRequest) -> bool:
@@ -176,6 +171,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
     Callback from the OP.
     Ends with a redirect.
     """
+
     http_method_names = ['get']
     SessionStore: Type[SessionBase]
 
@@ -207,8 +203,8 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
                 for key, value in old_session_items:
                     request.session.setdefault(key, value)
                 logger.debug(f"request.session replaced with {request.session.session_key=}")
-            except (JWTError, KeyError):
-                raise BadRequestException("state appears to be a JWT but the signature failed")
+            except (JWTError, KeyError) as e:
+                raise BadRequestException("state appears to be a JWT but the signature failed") from e
         return state
 
     def get_next_and_failure_url(self, request: HttpRequest, from_cli: bool) -> Tuple[str, str]:
@@ -331,6 +327,7 @@ class LogoutView(CacheBaseView, UrlParamsMixin):
     """
     Logout user from the application, called by RP user-agent.
     """
+
     http_method_names = ['get']
 
     def get_next_and_failure_url(self, request: HttpRequest) -> Tuple[str, str]:
@@ -366,6 +363,7 @@ class TotalLogoutView(LogoutView, UrlParamsMixin):
     """
     Logout user from the application, the OP and any application connected to the OP, called by RP user-agent.
     """
+
     def logout(self, request: HttpRequest, id_token: Optional[str], next_url: str, failure_url: str) -> HttpResponse:
         if id_token:  # only blacklist if an id_token was in the session
             BlacklistedToken.blacklist(id_token)
@@ -395,6 +393,7 @@ class LogoutByOPView(CacheBaseView):
     """
     Logout user, called by OP.
     """
+
     http_method_names = ['get']
 
     def get(self, request: HttpRequest) -> HttpResponse:

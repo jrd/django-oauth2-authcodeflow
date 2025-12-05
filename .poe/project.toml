@@ -1,0 +1,13 @@
+[tasks.project]
+help = "Create a test project"
+shell = """
+set -e
+[ -d project ] && rm -rf project
+python -m django startproject project
+(
+  cd project
+  ln -s ../oauth2_authcodeflow ./
+  sed -ri "/^INSTALLED_APPS/,/^\\]/s/^\\]/    'oauth2_authcodeflow',\\n&/" project/settings.py
+)
+echo project created
+"""

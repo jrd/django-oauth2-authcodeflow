@@ -5,12 +5,10 @@ from types import FunctionType
 from django.core.exceptions import ImproperlyConfigured
 from pytest import raises
 
-from oauth2_authcodeflow.conf import (
-    Settings,
-    get_default_django_username,
-    import_string_as_func,
-    settings,
-)
+from oauth2_authcodeflow.conf import Settings
+from oauth2_authcodeflow.conf import get_default_django_username
+from oauth2_authcodeflow.conf import import_string_as_func
+from oauth2_authcodeflow.conf import settings
 from oauth2_authcodeflow.views import AuthenticateView
 
 
@@ -44,9 +42,9 @@ def test_Settings_custom_default(settings):
     assert mysettings.DEBUG is False
     assert mysettings.TOTO == 'titi'
     with raises(ImproperlyConfigured, match="^Invalid setting: 'FOO' should be of type <class 'float'> and is of type <class 'bool'>$"):
-        mysettings.FOO
+        _ = mysettings.FOO
     with raises(ImproperlyConfigured, match="^Setting 'BAR' not found, it should be defined$"):
-        mysettings.BAR
+        _ = mysettings.BAR
     f = mysettings.BAZ
     assert f is get_default_django_username
 
@@ -55,7 +53,7 @@ def test_Settings_default(settings):
     mysettings = Settings()
     assert mysettings.DEBUG is False
     with raises(ImproperlyConfigured, match="^Setting 'OIDC_RP_CLIENT_SECRET' not found, it should be defined$"):
-        mysettings.OIDC_RP_CLIENT_SECRET
+        _ = mysettings.OIDC_RP_CLIENT_SECRET
     assert mysettings.OIDC_OP_DISCOVERY_DOCUMENT_URL is None
     assert mysettings.OIDC_OP_EXPECTED_EMAIL_CLAIM == 'email'
     assert mysettings.OIDC_RP_SCOPES == ['openid', 'email', 'profile', 'offline_access']

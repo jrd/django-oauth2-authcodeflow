@@ -1,14 +1,10 @@
-from datetime import (
-    datetime,
-    timedelta,
-    timezone,
-)
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 from json import dumps
 from re import escape
-from unittest.mock import (
-    MagicMock,
-    patch,
-)
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import BACKEND_SESSION_KEY
@@ -19,14 +15,12 @@ from django.http.response import HttpResponse
 from freezegun import freeze_time
 
 from oauth2_authcodeflow import constants
-from oauth2_authcodeflow.middleware import (
-    BearerAuthMiddleware,
-    LoginRequiredMiddleware,
-    MiddlewareException,
-    Oauth2MiddlewareMixin,
-    RefreshAccessTokenMiddleware,
-    RefreshSessionMiddleware,
-)
+from oauth2_authcodeflow.middleware import BearerAuthMiddleware
+from oauth2_authcodeflow.middleware import LoginRequiredMiddleware
+from oauth2_authcodeflow.middleware import MiddlewareException
+from oauth2_authcodeflow.middleware import Oauth2MiddlewareMixin
+from oauth2_authcodeflow.middleware import RefreshAccessTokenMiddleware
+from oauth2_authcodeflow.middleware import RefreshSessionMiddleware
 
 
 @pytest.fixture

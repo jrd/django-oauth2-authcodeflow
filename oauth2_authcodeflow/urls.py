@@ -1,9 +1,7 @@
 from django.urls import path
 
-from .conf import (
-    constants,
-    settings,
-)
+from .conf import constants
+from .conf import settings
 
 urlpatterns = [
     path('authenticate', settings.OIDC_VIEW_AUTHENTICATE.as_view(), name=constants.OIDC_URL_AUTHENTICATION_NAME),
