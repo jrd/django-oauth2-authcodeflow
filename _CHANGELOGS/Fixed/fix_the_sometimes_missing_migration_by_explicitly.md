@@ -1,0 +1,1 @@
+- Fix the, sometimes, missing migration by explicitly tells the AutoField type
