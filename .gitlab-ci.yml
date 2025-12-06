@@ -1,6 +1,6 @@
 include:
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/security@0.4
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-tests@0.4
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/security@0.5
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-tests@0.5
     inputs:
       linter-python-version: '3.10'
       python-tests-versions:
@@ -9,24 +9,20 @@ include:
         - '3.12'
         - '3.13'
         - '3.14'
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/tag@0.4
+      python-tests-future-system-packages: 'libffi-dev'
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/tag@0.5
     inputs:
       needs:
         - security
         - secret
         - python-linter
         - python-tests
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-publish@0.4
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/release@0.4
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-publish@0.5
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/release@0.5
     inputs:
       needs:
         - job: python-publish
           artifacts: true
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/social@0.4
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/social@0.5
     inputs:
       mastodon-enabled: true
-
-python-tests:future:
-  before_script:
-    - 'apk update && apk add build-base libffi-dev'
-    - !reference [.python, before_script]

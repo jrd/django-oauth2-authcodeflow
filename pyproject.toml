@@ -19,10 +19,11 @@ license-files = ["LICENSE"]
 license = "MIT"
 readme = "README.md"
 keywords = [
-    "oauth2",
-    "oidc",
-    "openid",
+  "oauth2",
+  "oidc",
+  "openid",
 ]
+# https://pypi.org/classifiers/
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
@@ -39,6 +40,7 @@ classifiers = [
   "Framework :: Django :: 5.0",
   "Framework :: Django :: 5.1",
   "Framework :: Django :: 5.2",
+  "Framework :: Django :: 6.0",
   "Topic :: Internet :: WWW/HTTP :: Session",
   "Topic :: Security",
   "Topic :: Software Development :: Libraries :: Python Modules",
@@ -106,7 +108,7 @@ select = [
   "E", # pycodestyle errors
   "W", # pycodestyle warnings
   "I", # isort
-  "U", # pyupgrade, avoid using deprecated syntax
+  "UP", # pyupgrade, avoid using deprecated syntax
   "B", # bugbear, avoid non-sense statements
   "COM", # commas
   "DTZ", # datetime timezone

@@ -1,0 +1,1 @@
+- Add Django 6.0 support
