@@ -8,6 +8,7 @@ include:
         - '3.11'
         - '3.12'
         - '3.13'
+        - '3.14'
   - component: $CI_SERVER_FQDN/snake_coders/tools/ci/tag@0.4
     inputs:
       needs:
