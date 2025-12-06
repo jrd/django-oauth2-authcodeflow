@@ -1,0 +1,1 @@
+- Drop Python 3.8 and 3.9 as they are EOL

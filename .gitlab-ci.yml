@@ -2,10 +2,8 @@ include:
   - component: $CI_SERVER_FQDN/snake_coders/tools/ci/security@0.4
   - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-tests@0.4
     inputs:
-      linter-python-version: '3.8'
+      linter-python-version: '3.10'
       python-tests-versions:
-        - '3.8'
-        - '3.9'
         - '3.10'
         - '3.11'
         - '3.12'
@@ -27,19 +25,7 @@ include:
     inputs:
       mastodon-enabled: true
 
-.python-hack:
-  before_script: &python-before-script
-    - | 
-      set -ex
-      # backports-zoneinfo is required on 3.8 and should be build
-      if echo "$PYTHON_VERSION"|cut -d. -f1-2|grep -qF 3.8 || echo "$PYTHON_VERSION"|grep -qE 'a|b|rc'; then
-        apk update
-        apk add build-base libffi-dev
-      fi
-    - !reference [.python, before_script]
-python-linter:
-  before_script: *python-before-script
-python-tests:
-  before_script: *python-before-script
 python-tests:future:
-  before_script: *python-before-script
+  before_script:
+    - 'apk update && apk add build-base libffi-dev'
+    - !reference [.python, before_script]
