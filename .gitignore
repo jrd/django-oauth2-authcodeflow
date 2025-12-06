@@ -1,7 +1,8 @@
 dist/
 project/
-__pycache__/
 reports/
-.coverage
-.venv/
-.cache/
+__pycache__/
+/.*cache*/
+/.coverage
+/.venv/
+/.env

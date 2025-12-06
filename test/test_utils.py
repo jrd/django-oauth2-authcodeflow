@@ -1,18 +1,14 @@
 from contextlib import nullcontext
-from unittest.mock import (
-    MagicMock,
-    patch,
-)
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse
 
 from oauth2_authcodeflow import constants
-from oauth2_authcodeflow.utils import (
-    OIDCUrlsMixin,
-    login_required,
-)
+from oauth2_authcodeflow.utils import OIDCUrlsMixin
+from oauth2_authcodeflow.utils import login_required
 
 
 @pytest.mark.parametrize('config', [

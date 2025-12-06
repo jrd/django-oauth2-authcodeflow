@@ -1,13 +1,9 @@
-from datetime import (
-    datetime,
-    timedelta,
-    timezone,
-)
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
 from logging import getLogger
-from typing import (
-    Optional,
-    cast,
-)
+from typing import Optional
+from typing import cast
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser

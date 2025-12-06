@@ -1,16 +1,12 @@
-from datetime import (
-    datetime,
-    timezone,
-)
+from datetime import datetime
+from datetime import timezone
 from inspect import signature
 from logging import getLogger
 from re import search
-from typing import (
-    Dict,
-    Optional,
-    Type,
-    cast,
-)
+from typing import Dict
+from typing import Optional
+from typing import Type
+from typing import cast
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
@@ -18,17 +14,13 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import SuspiciousOperation
 from django.http.request import HttpRequest
 from django.urls import reverse
-from jose import (
-    JWTError,
-    jwt,
-)
+from jose import JWTError
+from jose import jwt
 from requests import get as request_get
 from requests import post as request_post
 
-from .conf import (
-    constants,
-    settings,
-)
+from .conf import constants
+from .conf import settings
 from .models import BlacklistedToken
 from .utils import OIDCUrlsMixin
 
@@ -71,7 +63,7 @@ class AuthenticationMixin:
                 },
             )
         except JWTError as e:
-            raise SuspiciousOperation("JWT token verification failed: " + str(e))
+            raise SuspiciousOperation("JWT token verification failed: " + str(e)) from e
         if nonce is not None and claims.get('nonce') != nonce:
             raise SuspiciousOperation("JWT Nonce verification failed")
         return claims
@@ -95,10 +87,12 @@ class AuthenticationMixin:
         """access_token is not used here, id_claims is enough"""
         if settings.OIDC_OP_FETCH_USER_INFO and constants.SESSION_OP_USERINFO_URL in request.session and access_token:
             claims = id_claims.copy()
-            claims.update(request_get(
-                request.session[constants.SESSION_OP_USERINFO_URL],
-                headers={'Authorization': f'{settings.OIDC_AUTHORIZATION_HEADER_PREFIX} {access_token}'},
-            ).json())
+            claims.update(
+                request_get(
+                    request.session[constants.SESSION_OP_USERINFO_URL],
+                    headers={'Authorization': f'{settings.OIDC_AUTHORIZATION_HEADER_PREFIX} {access_token}'},
+                ).json()
+            )
             return claims
         else:
             return id_claims

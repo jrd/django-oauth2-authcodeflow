@@ -14,10 +14,10 @@ Summary
 [status-image]: https://img.shields.io/pypi/status/django-oauth2-authcodeflow
 [py-image]: https://img.shields.io/pypi/pyversions/django-oauth2-authcodeflow.svg
 [django-image]: https://img.shields.io/pypi/djversions/django-oauth2-authcodeflow.svg
-[pipeline-image]: https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/badges/master/pipeline.svg?ignore_skipped=true
-[pipeline-url]: https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/commits/master
-[coverage-image]: https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/badges/master/coverage.svg
-[coverage-url]: https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/commits/master
+[pipeline-image]: https://gitlab.com/snake_coders/django-oauth2-authcodeflow/badges/master/pipeline.svg?ignore_skipped=true
+[pipeline-url]: https://gitlab.com/snake_coders/django-oauth2-authcodeflow/-/commits/master
+[coverage-image]: https://gitlab.com/snake_coders/django-oauth2-authcodeflow/badges/master/coverage.svg
+[coverage-url]: https://gitlab.com/snake_coders/django-oauth2-authcodeflow/-/commits/master
 [license-image]: https://img.shields.io/pypi/l/django-oauth2-authcodeflow.svg
 
 Authenticate with any OpenId Connect/Oauth2 provider through authorization code flow with [Django](https://www.djangoproject.com/).

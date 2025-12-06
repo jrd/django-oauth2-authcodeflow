@@ -1,0 +1,15 @@
+[tasks.lint]
+help = "Run all python linters"
+sequence = ["lint_ruff ${FILE_PATHS}", "lint_mypy ${FILE_PATHS}"]
+args = [{ name = "FILE_PATHS", positional = true, multiple = true }]
+ignore_fail = "return_non_zero"
+
+[tasks.lint_ruff]
+help = "Run ruff to check for linter errors"
+cmd = "ruff check ${FILE_PATHS}"
+args = [{ name = "FILE_PATHS", positional = true, multiple = true, default = "." }]
+
+[tasks.lint_mypy]
+help = "Run mypy to check fot typing errors"
+cmd = "mypy ${FILE_PATHS}"
+args = [{ name = "FILE_PATHS", positional = true, multiple = true, default = "." }]

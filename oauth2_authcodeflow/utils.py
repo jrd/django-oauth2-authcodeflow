@@ -1,9 +1,7 @@
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    TypeVar,
-)
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import TypeVar
 from urllib.parse import urlencode
 
 from django.contrib.auth.decorators import login_required as orig_login_required
@@ -13,10 +11,8 @@ from django.urls import reverse_lazy
 from django.utils.text import format_lazy
 from requests import get as request_get
 
-from .conf import (
-    constants,
-    settings,
-)
+from .conf import constants
+from .conf import settings
 
 _VIEW = TypeVar("_VIEW", bound=Callable[..., HttpResponseBase])
 

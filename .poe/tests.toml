@@ -1,0 +1,8 @@
+[tasks.test]
+help = "Run python tests"
+cmd = "pytest -v"
+
+[tasks.test_quick]
+help = "Run a python test quickly"
+cmd = "pytest --no-cov --no-header -xsvv ${FILE_PATHS}"
+args = [{ name = "FILE_PATHS", positional = true, multiple = true, default = "" }]

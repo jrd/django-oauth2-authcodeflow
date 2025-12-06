@@ -1,96 +1,158 @@
-[tool.poetry]
+[project]
 name = "django-oauth2-authcodeflow"
 version = "1.3.1"
 description = "Authenticate with any OpenId Connect/Oauth2 provider through authorization code flow. PKCE is also supported."
-authors = ["Cyrille Pontvieux <cpontvieux@systra.com>"]
-maintainers = ["Cyrille Pontvieux <cyrille@enialis.net>"]
+authors = [
+  { name = "Cyrille Pontvieux", email = "cyrille@enialis.net" },
+  { name = "Befog", email = "ofogelberg@gmail.com" },
+  { name = "Eric Plaster", email = "plaster@gmail.com" },
+  { name = "Gabriel Dugny", email = "gabriel.dugny@manomano.com" },
+  { name = "Niko Tyni", email = "ntyni@cc.helsinki.fi" },
+  { name = "Pinoatrome", email = "pinoatrome@users.noreply.github.com" },
+  { name = "Samir Hachimi", email = "shachimi@systra.com" },
+  { name = "Sebastian Annies", email = "Sebastian.Annies@gmail.com" },
+]
+maintainers = [
+  { name = "Cyrille Pontvieux", email = "cyrille@enialis.net" },
+]
+license-files = ["LICENSE"]
 license = "MIT"
 readme = "README.md"
-repository = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow"
-documentation = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/blob/master/README.md"
-keywords = ["oauth2", "oidc", "openid"]
-# https://pypi.org/classifiers/
-classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Developers",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Environment :: Web Environment",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Framework :: Django",
-    "Framework :: Django :: 4.2",
-    "Framework :: Django :: 5.0",
-    "Framework :: Django :: 5.1",
-    "Framework :: Django :: 5.2",
-    "Topic :: Internet :: WWW/HTTP :: Session",
-    "Topic :: Security",
-    "Topic :: Software Development :: Libraries :: Python Modules",
-    "Typing :: Typed",
+keywords = [
+    "oauth2",
+    "oidc",
+    "openid",
 ]
-packages = [{include = "oauth2_authcodeflow"}]
-include = ["CHANGELOG.md", "OP.md"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Environment :: Web Environment",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Framework :: Django",
+  "Framework :: Django :: 4.2",
+  "Framework :: Django :: 5.0",
+  "Framework :: Django :: 5.1",
+  "Framework :: Django :: 5.2",
+  "Topic :: Internet :: WWW/HTTP :: Session",
+  "Topic :: Security",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Typing :: Typed",
+]
+requires-python = ">=3.8"
+dependencies = [
+  "django>=4.2",
+  "python-jose[cryptography]>=3.3",
+  "requests>=2.28",
+]
 
-[tool.poetry.urls]
+[dependency-groups]
+dev = [
+  "freezegun",
+  "pdbpp",
+  "poethepoet",
+  "pytest",
+  "pytest-cov",
+  "pytest-django",
+  "pytest-html",
+  "ruff",
+]
+typing = [
+  "django-types",
+  "mypy",
+  "types-cryptography",
+  "types-python-jose",
+  "types-requests",
+]
+
+[project.urls]
 # https://github.com/pypi/warehouse/blob/main/warehouse/templates/packaging/detail.html#L20
-"Bug Tracker" = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/issues"
-"Merge Requests" = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/merge_requests"
-"Changelog" = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/blob/master/CHANGELOG.md"
-"Contributing" = "https://gitlab.com/systra/qeto/lib/django-oauth2-authcodeflow/-/blob/master/CONTRIBUTING.md"
-# Any Github url will be used for stats
+"Repository" = "https://gitlab.com/snake_coders/django-oauth2-authcodeflow"
+"Documentation" = "https://gitlab.com/snake_coders/django-oauth2-authcodeflow/-/blob/master/README.md"
+"Bug Tracker" = "https://gitlab.com/snake_coders/django-oauth2-authcodeflow/-/issues"
+"Merge Requests" = "https://gitlab.com/snake_coders/django-oauth2-authcodeflow/-/merge_requests"
+"Changelog" = "https://gitlab.com/snake_coders/django-oauth2-authcodeflow/-/blob/master/CHANGELOG.md"
+"Contributing" = "https://gitlab.com/snake_coders/django-oauth2-authcodeflow/-/blob/master/CONTRIBUTING.md"
 "Github mirror" = "https://github.com/jrd/django-oauth2-authcodeflow"
 
-[tool.poetry.dependencies]
-# https://docs.djangoproject.com/en/dev/faq/install/#faq-python-version-support
-python = "^3.8"
-django = ">=4.2"
-python-jose = {extras = ["cryptography"], version = ">=3.3"}
-requests = ">=2.28"
+[tool.uv]
+default-groups = [
+  "dev",
+  "typing",
+]
 
-[tool.poetry.group.dev.dependencies]
-flake8 = "*"
-flake8-pyproject = "*"
-freezegun = "*"
-isort = "*"
-pdbpp = "*"
-pytest = "*"
-pytest-cov = "*"
-pytest-django = "*"
-pytest-html = "*"
+[tool.poe]
+verbosity = -1
+include = [
+  ".poe/project.toml",
+  ".poe/linters.toml",
+  ".poe/tests.toml",
+]
 
-[tool.poetry.group.typing.dependencies]
-django-types = "*"
-mypy = "*"
-types-cryptography = "*"
-types-python-jose = "*"
-types-requests = "*"
+[tool.ruff]
+line-length = 160
+target-version = "py38"
 
-[tool.flake8]
-max-line-length = 160
-exclude = [".venv", "venv"]
+[tool.ruff.lint]
+preview = true
+# https://docs.astral.sh/ruff/rules
+select = [
+  "F", # pyflake8
+  "E", # pycodestyle errors
+  "W", # pycodestyle warnings
+  "I", # isort
+  "U", # pyupgrade, avoid using deprecated syntax
+  "B", # bugbear, avoid non-sense statements
+  "COM", # commas
+  "DTZ", # datetime timezone
+  "PTH", # prefer pathlib
+  "LOG", # logging
+  "T100", # debugger
+  "T201", # print
+  "T203", # pprint
+  "FIX", # lines with TODO, FIXME, XXX and HACK
+  "Q001", "Q002", "Q004", # double quotes for multiline and pydoc + check for unnecessary escape
+]
+ignore = [
+  "COM812", # conflict with ruff formatter
+]
+[tool.ruff.lint.pycodestyle]
+ignore-overlong-task-comments = true
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-wrap-aliases = true
+force-single-line = true
+relative-imports-order = "closest-to-furthest"
+split-on-trailing-comma = false
+[tool.ruff.format]
+quote-style = "preserve"
+line-ending = "lf"
+
+[tool.mypy]
+# https://mypy.readthedocs.io/en/stable/config_file.html#confval-exclude
+exclude = [
+  '/migrations/.*\.py$',
+  '/tests/.*\.py$',
+  '\.cache',
+  '\.venv',
+]
+allow_redefinition = false
+# plugins = ["mypy_django_plugin.main"]
+# [tool.mypy.plugins.django-stubs]
+# django_settings_module = "test.settings"
 
 [tool.pytest.ini_options]
 django_find_project = "false" # do not rely on manage.py file presence
 pythonpath = "." # indicate the root path
 django_debug_mode = "keep" # respect debug mode in test settings
 DJANGO_SETTINGS_MODULE = "test.settings"
-junit_family = "xunit2"
-junit_logging = "all"
-addopts = [
-    "--color=auto",
-    "--code-highlight=yes",
-    "--junit-xml=reports/report.xunit",
-    "--html=reports/report.html",
-    "--self-contained-html",
-    "--cov",
-    "--cov-report=term",
-    "--cov-report=xml",
-    "--cov-report=html",
-]
+addopts = ["--cov"]
 [tool.coverage.run]
 source = ["oauth2_authcodeflow"]
 omit = ["tests/*", "*/migrations/*", "*/__init__.py"]
@@ -104,15 +166,11 @@ output = "reports/coverage.xml"
 directory = "reports/coverage"
 title = "Django OAuth2 Auth Code Flow coverage"
 
-[[tool.poetry.source]]
-name = "PyPI"
-priority = "primary"
-
-[[tool.poetry.source]]
-name = "testPyPI"
-url = "https://test.pypi.org/legacy/"
-priority = "explicit"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+# https://docs.astral.sh/uv/concepts/build-backend
+requires = ["uv_build>=0.9.15,<0.10.0"]
+build-backend = "uv_build"
+[tool.uv.build-backend]
+module-root = ""
+module-name = "oauth2_authcodeflow"
+source-include = ["CONTRIBUTING.md", "CHANGELOG.md", "OP.md"]

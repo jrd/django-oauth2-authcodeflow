@@ -1,14 +1,12 @@
 from base64 import urlsafe_b64encode
 from hashlib import sha1
 from types import FunctionType
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Optional,
-    Set,
-    Tuple,
-)
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Optional
+from typing import Set
+from typing import Tuple
 
 from django.conf import settings as dj_settings
 from django.core.exceptions import ImproperlyConfigured
@@ -22,14 +20,12 @@ def import_string_as_func(value: str, attr: str) -> Callable:
     try:
         return import_string(value)
     except ImportError as e:
-        raise ImportError(f"Could not import '{value}' for API setting '{attr}'. {e.__class__.__name__}: {e}.")
+        raise ImportError(f"Could not import '{value}' for API setting '{attr}'. {e.__class__.__name__}: {e}.") from None
 
 
 def get_default_django_username(claims: Dict) -> str:
     """base64 encode of the email hash (sha1)"""
-    return urlsafe_b64encode(
-        sha1(claims.get('email', '').encode('utf8')).digest()
-    ).decode('ascii').rstrip('=')
+    return urlsafe_b64encode(sha1(claims.get('email', '').encode('utf8')).digest()).decode('ascii').rstrip('=')
 
 
 DEFAULTS: Dict[str, Tuple[Any, Any]] = {
@@ -157,6 +153,7 @@ class Settings:
     """
     A settings object, that allows settings to be accessed as properties.
     """
+
     defaults: Dict[str, Tuple[Any, Any]]
 
     def __init__(self, defaults: Optional[Dict[str, Tuple[Any, Any]]] = None) -> None:
@@ -168,9 +165,9 @@ class Settings:
         atype, def_val = self.defaults.get(attr, (None, None))
         val = getattr(dj_settings, attr, def_val)
         if atype is None:  # other setting
-            atype = type(val),
+            atype = (type(val),)
         elif not isinstance(atype, tuple):
-            atype = atype,
+            atype = (atype,)
         val = self._check_type_and_get_value(attr, val, atype)
         # cache the result
         self._cache.add(attr)

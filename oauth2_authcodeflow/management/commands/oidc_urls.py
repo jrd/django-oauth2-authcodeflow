@@ -1,7 +1,5 @@
-from django.core.management.base import (
-    BaseCommand,
-    CommandError,
-)
+from django.core.management.base import BaseCommand
+from django.core.management.base import CommandError
 from django.http import HttpRequest
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
@@ -26,4 +24,4 @@ class Command(BaseCommand):
             self.stdout.write(f"redirect_url: {redirect_url}")
             self.stdout.write(f"logout_url: {logout_url}")
         except NoReverseMatch as e:
-            raise CommandError(str(e))
+            raise CommandError(str(e)) from e
