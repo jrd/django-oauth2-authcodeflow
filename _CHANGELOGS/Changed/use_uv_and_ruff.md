@@ -1,1 +1,0 @@
-- Use uv and ruff

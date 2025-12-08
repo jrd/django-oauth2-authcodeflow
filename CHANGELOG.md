@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.4.0
+
+### 🔧 Fixed
+- Fix the, sometimes, missing migration by explicitly tells the AutoField type
+
+### 📝 Changed
+- Use uv and ruff
+
+### ➕ Added
+- Add Django 6.0 support
+- Add Python 3.14 support
+
+### ➖ Removed
+- Drop Python 3.8 and 3.9 as they are EOL
+
 ## 1.3.1
 ### Fixed
 - Refresh token call should use an origin header in Azure SPA
