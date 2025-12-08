@@ -1,6 +1,5 @@
+from collections.abc import Callable
 from typing import Any
-from typing import Callable
-from typing import Dict
 from typing import TypeVar
 from urllib.parse import urlencode
 
@@ -18,7 +17,7 @@ _VIEW = TypeVar("_VIEW", bound=Callable[..., HttpResponseBase])
 
 
 class OIDCUrlsMixin:
-    def get_oidc_urls(self, session: Dict[str, Any]) -> Dict[str, Any]:
+    def get_oidc_urls(self, session: dict[str, Any]) -> dict[str, Any]:
         session = dict(session.items())  # .copy() is not available on SessionStore
         if settings.OIDC_OP_DISCOVERY_DOCUMENT_URL:
             if any((

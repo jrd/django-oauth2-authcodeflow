@@ -60,7 +60,7 @@ class BlacklistedToken(models.Model):
         return nb
 
     @cached_property
-    def user(self) -> Optional[AbstractUser]:
+    def user(self) -> AbstractUser | None:
         User = get_user_model()
         try:
             return cast(AbstractUser, User.objects.get(username=self.username))

@@ -1,12 +1,8 @@
 from base64 import urlsafe_b64encode
+from collections.abc import Callable
 from hashlib import sha1
 from types import FunctionType
 from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import Optional
-from typing import Set
-from typing import Tuple
 
 from django.conf import settings as dj_settings
 from django.core.exceptions import ImproperlyConfigured
@@ -23,12 +19,12 @@ def import_string_as_func(value: str, attr: str) -> Callable:
         raise ImportError(f"Could not import '{value}' for API setting '{attr}'. {e.__class__.__name__}: {e}.") from None
 
 
-def get_default_django_username(claims: Dict) -> str:
+def get_default_django_username(claims: dict) -> str:
     """base64 encode of the email hash (sha1)"""
     return urlsafe_b64encode(sha1(claims.get('email', '').encode('utf8')).digest()).decode('ascii').rstrip('=')
 
 
-DEFAULTS: Dict[str, Tuple[Any, Any]] = {
+DEFAULTS: dict[str, tuple[Any, Any]] = {
     'OIDC_VIEW_AUTHENTICATE': (type, f'{__package__}.views.AuthenticateView'),
     'OIDC_VIEW_CALLBACK': (type, f'{__package__}.views.CallbackView'),
     'OIDC_VIEW_LOGOUT': (type, f'{__package__}.views.LogoutView'),
@@ -154,11 +150,11 @@ class Settings:
     A settings object, that allows settings to be accessed as properties.
     """
 
-    defaults: Dict[str, Tuple[Any, Any]]
+    defaults: dict[str, tuple[Any, Any]]
 
-    def __init__(self, defaults: Optional[Dict[str, Tuple[Any, Any]]] = None) -> None:
+    def __init__(self, defaults: dict[str, tuple[Any, Any]] | None = None) -> None:
         self.defaults = defaults or DEFAULTS
-        self._cache: Set[str] = set()
+        self._cache: set[str] = set()
         setting_changed.connect(self.reload)
 
     def __getattr__(self, attr: str) -> Any:

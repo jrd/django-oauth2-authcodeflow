@@ -1,0 +1,1 @@
+- Upgrade code to use only Python 3.10+ syntax

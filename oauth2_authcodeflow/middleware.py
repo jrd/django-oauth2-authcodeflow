@@ -1,11 +1,8 @@
+from collections.abc import Callable
 from datetime import datetime
 from datetime import timezone
 from logging import getLogger
 from re import search
-from typing import Callable
-from typing import Optional
-from typing import Tuple
-from typing import Union
 from urllib.parse import urlencode
 
 from django.contrib.auth import BACKEND_SESSION_KEY
@@ -46,11 +43,11 @@ class Oauth2MiddlewareMixin:
     """
 
     get_response: GetResponseCallable
-    token_type: Optional[str]
-    check_function: Optional[CheckFunctionCallable]
-    exempt_urls: Tuple[str, ...]
+    token_type: str | None
+    check_function: CheckFunctionCallable | None
+    exempt_urls: tuple[str, ...]
 
-    def __init__(self, get_response: GetResponseCallable, token_type: Optional[str], check_function: Optional[CheckFunctionCallable]) -> None:
+    def __init__(self, get_response: GetResponseCallable, token_type: str | None, check_function: CheckFunctionCallable | None) -> None:
         self.get_response = get_response
         self.token_type = token_type
         self.check_function = check_function
@@ -143,13 +140,13 @@ class Oauth2MiddlewareMixin:
             )
         )
 
-    def re_authent_or_401(self, request: HttpRequest, error: str, next_url: str, failure_url: str) -> Union[JsonResponse, HttpResponseRedirect]:
+    def re_authent_or_401(self, request: HttpRequest, error: str, next_url: str, failure_url: str) -> JsonResponse | HttpResponseRedirect:
         if self.is_api_request(request):
             return self.json_401(request, error)
         else:
             return self.re_authent(request, next_url, failure_url)
 
-    def process_request(self, request: HttpRequest) -> Optional[HttpResponse]:
+    def process_request(self, request: HttpRequest) -> HttpResponse | None:
         try:
             self.check_blacklisted(request)
             if self.check_function:
@@ -322,7 +319,7 @@ class BearerAuthMiddleware(Oauth2MiddlewareMixin):
     def __init__(self, get_response: GetResponseCallable) -> None:
         super().__init__(get_response, None, None)
 
-    def process_request(self, request: HttpRequest) -> Optional[HttpResponse]:
+    def process_request(self, request: HttpRequest) -> HttpResponse | None:
         if 'Authorization' in request.headers:
             user = BearerAuthenticationBackend().authenticate(request)
             if user:

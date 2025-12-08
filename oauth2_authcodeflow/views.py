@@ -3,11 +3,6 @@ from base64 import urlsafe_b64encode
 from hashlib import sha256
 from importlib import import_module
 from logging import getLogger
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Type
 from urllib.parse import parse_qs
 
 from django.contrib import auth
@@ -77,7 +72,7 @@ class AuthenticateView(CacheBaseView, UrlParamsMixin):
     def get_from_cli(self, request: HttpRequest) -> bool:
         return bool(request.GET.get(constants.OIDC_FROM_CLI_QUERY_STRING))
 
-    def get_next_and_failure_url(self, request: HttpRequest, from_cli: bool) -> Tuple[str, str]:
+    def get_next_and_failure_url(self, request: HttpRequest, from_cli: bool) -> tuple[str, str]:
         if from_cli:
             next_url = '/FROM_CLI_OK'
             failure_url = '/FROM_CLI_FAIL'
@@ -91,7 +86,7 @@ class AuthenticateView(CacheBaseView, UrlParamsMixin):
             raise SuspiciousOperation(f"{settings.OIDC_REDIRECT_ERROR_FIELD_NAME} parameter is required")
         return next_url, failure_url
 
-    def get_claims_parameter(self, request: HttpRequest) -> Optional[Dict[str, str]]:
+    def get_claims_parameter(self, request: HttpRequest) -> dict[str, str] | None:
         if request.session.get(constants.SESSION_OP_CLAIMS_PARAMETER_SUPPORTED, False):
             claims_parameter = {}
             if settings.OIDC_RP_USERINFO_CLAIMS:
@@ -102,13 +97,13 @@ class AuthenticateView(CacheBaseView, UrlParamsMixin):
                 return claims_parameter
         return None
 
-    def fill_params_for_pkce(self, request: HttpRequest, session_updates: Dict[str, str], auth_params: Dict[str, str], from_cli: bool) -> None:
+    def fill_params_for_pkce(self, request: HttpRequest, session_updates: dict[str, str], auth_params: dict[str, str], from_cli: bool) -> None:
         code_verifier = get_random_string(length=100, allowed_chars='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~')
         code_challenge = urlsafe_b64encode(sha256(code_verifier.encode('ascii')).digest()).decode('ascii').strip('=')
         auth_params.update(code_challenge_method='S256', code_challenge=code_challenge)
         session_updates[constants.SESSION_CHALLENGE] = code_verifier
 
-    def fill_params_without_pkce(self, request: HttpRequest, session_updates: Dict[str, str], auth_params: Dict[str, str], from_cli: bool) -> None:
+    def fill_params_without_pkce(self, request: HttpRequest, session_updates: dict[str, str], auth_params: dict[str, str], from_cli: bool) -> None:
         if from_cli:
             state = jwt.encode({'session_key': request.session.session_key}, settings.SECRET_KEY, algorithm='HS256')
         else:
@@ -118,9 +113,9 @@ class AuthenticateView(CacheBaseView, UrlParamsMixin):
         session_updates[constants.SESSION_STATE] = state
         session_updates[constants.SESSION_NONCE] = nonce
 
-    def get_auth_params(self, request: HttpRequest, from_cli: bool, use_pkce: bool, scopes: List[str]) -> Tuple[Dict[str, str], Dict[str, str]]:
-        session_updates: Dict[str, str] = {}
-        auth_params: Dict[str, str] = {
+    def get_auth_params(self, request: HttpRequest, from_cli: bool, use_pkce: bool, scopes: list[str]) -> tuple[dict[str, str], dict[str, str]]:
+        session_updates: dict[str, str] = {}
+        auth_params: dict[str, str] = {
             'response_type': 'code',
             'client_id': settings.OIDC_RP_CLIENT_ID,
             'scope': ' '.join(scopes),
@@ -173,7 +168,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
     """
 
     http_method_names = ['get']
-    SessionStore: Type[SessionBase]
+    SessionStore: type[SessionBase]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -190,7 +185,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
         else:
             return False
 
-    def prepare_session_and_get_state(self, request: HttpRequest, from_cli: bool) -> Optional[str]:
+    def prepare_session_and_get_state(self, request: HttpRequest, from_cli: bool) -> str | None:
         state = request.GET.get('state', None)
         if state and from_cli:
             logger.debug("Try to get the session from the state parameter instead of using cookies")
@@ -207,14 +202,14 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
                 raise BadRequestException("state appears to be a JWT but the signature failed") from e
         return state
 
-    def get_next_and_failure_url(self, request: HttpRequest, from_cli: bool) -> Tuple[str, str]:
+    def get_next_and_failure_url(self, request: HttpRequest, from_cli: bool) -> tuple[str, str]:
         next_url = request.session.get(constants.SESSION_NEXT_URL)
         failure_url = request.session.get(constants.SESSION_FAIL_URL)
         if not next_url or not failure_url:
             raise BadRequestException(f"{constants.SESSION_NEXT_URL} and {constants.SESSION_FAIL_URL} session parameters should be filled")
         return next_url, failure_url
 
-    def get_redirect_url(self, request: HttpRequest, use_pkce: bool, from_cli: bool, state: Optional[str], next_url: str, failure_url: str) -> str:
+    def get_redirect_url(self, request: HttpRequest, use_pkce: bool, from_cli: bool, state: str | None, next_url: str, failure_url: str) -> str:
         if request.GET.get('error'):
             logger.warning(request.GET['error'])
             # Make sure the user doesn't get to continue to be logged in in Django
@@ -263,13 +258,13 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
         except BadRequestException as e:
             return HttpResponseBadRequest(str(e).encode('utf8'))
 
-    def extract_auth_callback_params_with_pkce(self, request: HttpRequest) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    def extract_auth_callback_params_with_pkce(self, request: HttpRequest) -> tuple[str | None, str | None, str | None]:
         session_challenge = request.session.pop(constants.SESSION_CHALLENGE, None)
         if not session_challenge:
             raise SuspiciousOperation('OIDC callback: challenge not found in session')
         return None, None, session_challenge
 
-    def extract_auth_callback_params_without_pkce(self, request: HttpRequest) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    def extract_auth_callback_params_without_pkce(self, request: HttpRequest) -> tuple[str | None, str | None, str | None]:
         session_state = request.session.pop(constants.SESSION_STATE, None)
         if not session_state:
             raise SuspiciousOperation('OIDC callback: state not found in session')
@@ -281,7 +276,7 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
             raise SuspiciousOperation('OIDC callback: nonce not found in session')
         return state, session_nonce, None
 
-    def extract_auth_callback_params(self, request: HttpRequest, use_pkce: bool) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    def extract_auth_callback_params(self, request: HttpRequest, use_pkce: bool) -> tuple[str | None, str | None, str | None]:
         if use_pkce:
             return self.extract_auth_callback_params_with_pkce(request)
         else:
@@ -330,7 +325,7 @@ class LogoutView(CacheBaseView, UrlParamsMixin):
 
     http_method_names = ['get']
 
-    def get_next_and_failure_url(self, request: HttpRequest) -> Tuple[str, str]:
+    def get_next_and_failure_url(self, request: HttpRequest) -> tuple[str, str]:
         next_url = request.GET.get(settings.OIDC_REDIRECT_OK_FIELD_NAME)
         failure_url = request.GET.get(settings.OIDC_REDIRECT_ERROR_FIELD_NAME)
         if not next_url:
@@ -347,7 +342,7 @@ class LogoutView(CacheBaseView, UrlParamsMixin):
         except BadRequestException as e:
             return HttpResponseBadRequest(str(e).encode('utf8'))
 
-    def logout(self, request: HttpRequest, id_token: Optional[str], next_url: str, failure_url: str) -> HttpResponse:
+    def logout(self, request: HttpRequest, id_token: str | None, next_url: str, failure_url: str) -> HttpResponse:
         try:
             if id_token:  # only blacklist if an id_token was in the session
                 BlacklistedToken.blacklist(id_token)
@@ -364,7 +359,7 @@ class TotalLogoutView(LogoutView, UrlParamsMixin):
     Logout user from the application, the OP and any application connected to the OP, called by RP user-agent.
     """
 
-    def logout(self, request: HttpRequest, id_token: Optional[str], next_url: str, failure_url: str) -> HttpResponse:
+    def logout(self, request: HttpRequest, id_token: str | None, next_url: str, failure_url: str) -> HttpResponse:
         if id_token:  # only blacklist if an id_token was in the session
             BlacklistedToken.blacklist(id_token)
         end_session_url = request.session.get(constants.SESSION_OP_END_SESSION_URL)
