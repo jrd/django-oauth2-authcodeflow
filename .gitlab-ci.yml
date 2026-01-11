@@ -1,6 +1,6 @@
 include:
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/security@0.5
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-tests@0.5
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/security@0.6
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-tests@0.6
     inputs:
       linter-python-version: '3.10'
       python-tests-versions:
@@ -10,19 +10,19 @@ include:
         - '3.13'
         - '3.14'
       python-tests-future-system-packages: 'libffi-dev'
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/tag@0.5
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/tag@0.6
     inputs:
       needs:
         - security
         - secret
         - python-linter
         - python-tests
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-publish@0.5
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/release@0.5
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-publish@0.6
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/release@0.6
     inputs:
       needs:
         - job: python-publish
           artifacts: true
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/social@0.5
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/social@0.6
     inputs:
       mastodon-enabled: true
