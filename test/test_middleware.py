@@ -96,7 +96,7 @@ class TestOauth2MiddlewareMixin:
         assert mixin.is_oidc_enabled(request) is False
         session[BACKEND_SESSION_KEY] = 'oauth2_authcodeflow.auth.AuthenticationBackend'
         assert mixin.is_oidc_enabled(request) is True
-        delattr(request, 'user')
+        del request.user
         assert mixin.is_oidc_enabled(request) is False
 
     @patch('oauth2_authcodeflow.middleware.Oauth2MiddlewareMixin.is_oidc_enabled')
@@ -286,7 +286,7 @@ class TestLoginRequiredMiddleware:
         middleware.check_login_required(request)
         request.user = MagicMock(is_authenticated=False)
         middleware.check_login_required(request)
-        delattr(request, 'user')
+        del request.user
         middleware.check_login_required(request)
         is_login_required_for_url.return_value = True
         session[constants.SESSION_ID_TOKEN] = 'abc123'
