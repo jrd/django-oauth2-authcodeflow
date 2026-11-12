@@ -30,16 +30,15 @@ classifiers = [
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Environment :: Web Environment",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Framework :: Django",
-  "Framework :: Django :: 5.0",
-  "Framework :: Django :: 5.1",
   "Framework :: Django :: 5.2",
   "Framework :: Django :: 6.0",
+  "Framework :: Django :: 6.1",
   "Topic :: Internet :: WWW/HTTP :: Session",
   "Topic :: Security",
   "Topic :: Software Development :: Libraries :: Python Modules",
@@ -48,7 +47,7 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
   "django>=5.0",
-  "python-jose[cryptography]>=3.3",
+  "pyjwt[crypto]>=2.15",
   "requests>=2.28",
 ]
 
@@ -67,7 +66,6 @@ typing = [
   "django-types",
   "mypy",
   "types-cryptography",
-  "types-python-jose",
   "types-requests",
 ]
 
@@ -168,7 +166,7 @@ title = "Django OAuth2 Auth Code Flow coverage"
 
 [build-system]
 # https://docs.astral.sh/uv/concepts/build-backend
-requires = ["uv_build>=0.9.15,<1.0.0"]
+requires = ["uv_build>=0.13.7,<1.0.0"]
 build-backend = "uv_build"
 [tool.uv.build-backend]
 module-root = ""

@@ -5,6 +5,7 @@ from importlib import import_module
 from logging import getLogger
 from urllib.parse import parse_qs
 
+import jwt
 from django.contrib import auth
 from django.contrib.sessions.backends.base import SessionBase
 from django.core.exceptions import SuspiciousOperation
@@ -18,8 +19,6 @@ from django.utils.decorators import method_decorator
 from django.utils.http import urlencode
 from django.views.decorators.cache import never_cache
 from django.views.generic import View
-from jose import jwt
-from jose.exceptions import JWTError
 
 from .conf import constants
 from .conf import settings
@@ -178,9 +177,9 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
         if 'state' in request.GET:
             state = request.GET['state']
             try:
-                jwt.get_unverified_header(state)
+                jwt.decode(state, options=dict(verify_signature=False))
                 return True
-            except JWTError:
+            except jwt.PyJWTError:
                 return False
         else:
             return False
@@ -192,13 +191,13 @@ class CallbackView(CacheBaseView, UrlParamsMixin):
             try:
                 # as called from CLI initialy, the session will not be in the cookie.
                 # hence, load the session from the session_key stored in the jwt state
-                session_key = jwt.decode(state, settings.SECRET_KEY, 'HS256')['session_key']
+                session_key = jwt.decode(state, settings.SECRET_KEY, algorithms=['HS256'])['session_key']
                 old_session_items = request.session.items()
                 request.session = self.SessionStore(session_key)
                 for key, value in old_session_items:
                     request.session.setdefault(key, value)
                 logger.debug(f"request.session replaced with {request.session.session_key=}")
-            except (JWTError, KeyError) as e:
+            except (jwt.PyJWTError, KeyError) as e:
                 raise BadRequestException("state appears to be a JWT but the signature failed") from e
         return state
 
@@ -398,7 +397,7 @@ class LogoutByOPView(CacheBaseView):
                 raise ValueError("sid parameter is required for logout by OP")
             id_token = request.session.get(constants.SESSION_ID_TOKEN)
             if id_token:
-                claims = jwt.get_unverified_claims(id_token)
+                claims = jwt.decode(id_token, options=dict(verify_signature=False))
                 if claims.get('sid', sid) != sid:
                     raise ValueError("bad sid parameter")
                 BlacklistedToken.blacklist(id_token)

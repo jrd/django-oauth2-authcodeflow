@@ -1,0 +1,1 @@
+- Support for django 6.1
