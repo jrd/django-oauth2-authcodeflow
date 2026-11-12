@@ -1,3 +1,4 @@
+from base64 import urlsafe_b64decode
 from datetime import datetime
 from datetime import timezone
 from inspect import signature
@@ -5,14 +6,15 @@ from logging import getLogger
 from re import search
 from typing import cast
 
+import jwt
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import SuspiciousOperation
 from django.http.request import HttpRequest
 from django.urls import reverse
-from jose import JWTError
-from jose import jwt
 from requests import get as request_get
 from requests import post as request_post
 
@@ -27,8 +29,35 @@ logger = getLogger(__name__)
 class AuthenticationMixin:
     UserModel: type[AbstractUser] = cast(type[AbstractUser], get_user_model())
 
+    def _jwk_to_pem(self, jwk: dict[str, str]) -> str:
+        if jwk.get('kty') != 'RSA':
+            raise ValueError('Only RSA keys are supported')
+        if 'n' not in jwk or 'e' not in jwk:
+            raise ValueError('Not a valide RSA key, n or e is missing')
+
+        def base64_to_int(data: str | bytes) -> int:
+            if isinstance(data, bytes):
+                data = data.decode('ascii')
+            padding = 4 - len(data) % 4
+            if padding != 4:
+                data += '=' * padding
+            return int.from_bytes(urlsafe_b64decode(data), 'big')
+
+        n = base64_to_int(jwk['n'])
+        e = base64_to_int(jwk['e'])
+        public_key = rsa.RSAPublicNumbers(e, n).public_key()
+        pem = public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,  # type: ignore
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,  # type: ignore
+        )
+        return pem.decode()
+
     def validate_and_decode_id_token(self, id_token: str, nonce: str | None, jwks: dict) -> dict:
-        header = jwt.get_unverified_header(id_token)
+        try:
+            decoded = jwt.decode_complete(id_token, options=dict(verify_signature=False))
+        except jwt.PyJWTError as e:
+            raise SuspiciousOperation("Malformed JWT token: " + str(e)) from e
+        header = decoded['header']
         if 'alg' not in header:
             raise SuspiciousOperation("No alg value found in header")
         algo = header['alg']
@@ -41,6 +70,8 @@ class AuthenticationMixin:
                 key = jwks.get(header.get('kid'))
                 if not key or key.get('alg', algo) != algo:
                     raise SuspiciousOperation(f"No key found matching key id {header.get('kid')} and algorithm {algo}")
+                if isinstance(key, dict):
+                    key = self._jwk_to_pem(key)
         elif algo.startswith('HS'):
             key = settings.OIDC_RP_CLIENT_SECRET
         else:
@@ -51,15 +82,13 @@ class AuthenticationMixin:
                 key,
                 algorithms=settings.OIDC_RP_SIGN_ALGOS_ALLOWED,
                 audience=settings.OIDC_RP_CLIENT_ID,
-                options={
-                    'verify_aud': True,
-                    'verify_iss': False,
-                    'verify_sub': False,
-                    'verify_iat': False,
-                    'verify_at_hash': False,
-                },
+                options=dict(
+                    verify_iat=False,
+                    verify_iss=False,
+                    verify_sub=False,
+                ),
             )
-        except JWTError as e:
+        except jwt.PyJWTError as e:
             raise SuspiciousOperation("JWT token verification failed: " + str(e)) from e
         if nonce is not None and claims.get('nonce') != nonce:
             raise SuspiciousOperation("JWT Nonce verification failed")

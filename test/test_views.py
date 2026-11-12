@@ -8,7 +8,7 @@ from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
-from jose.exceptions import JWTError
+from jwt import PyJWTError
 
 from oauth2_authcodeflow import constants
 from oauth2_authcodeflow.views import AuthenticateView
@@ -27,10 +27,12 @@ def sf():
     Session factory
     takes a request as argument and create a session (not saved) on it
     """
+
     def session_factory(request):
         middleware = SessionMiddleware(lambda x: None)
         middleware.process_request(request)
         return request.session
+
     yield session_factory
 
 
@@ -81,11 +83,14 @@ class TestUrlParamsMixin:
         mixin = UrlParamsMixin()
         assert mixin.get_url_with_params('/toto/tutu') == '/toto/tutu'
         assert mixin.get_url_with_params('/toto/tutu', truc='machin') == '/toto/tutu?truc=machin'
-        assert mixin.get_url_with_params(
-            '/toto/tutu',
-            remember='1',
-            url='https://some.example.com/where',
-        ) == '/toto/tutu?remember=1&url=https%3A%2F%2Fsome.example.com%2Fwhere'
+        assert (
+            mixin.get_url_with_params(
+                '/toto/tutu',
+                remember='1',
+                url='https://some.example.com/where',
+            )
+            == '/toto/tutu?remember=1&url=https%3A%2F%2Fsome.example.com%2Fwhere'
+        )
 
 
 class TestAuthenticateView:
@@ -396,22 +401,24 @@ class TestCallbackView:
     @patch('oauth2_authcodeflow.views.jwt')
     def test_get_from_cli(self, jwt, rf):
         view = CallbackView()
-        jwt.get_unverified_header.side_effect = JWTError
+        jwt.PyJWTError = PyJWTError
+        jwt.decode.side_effect = PyJWTError
         request = rf.get('/')
         assert view.get_from_cli(request) is False
         request = rf.get('/', {'state': 'some.state.sign'})
         assert view.get_from_cli(request) is False
-        jwt.get_unverified_header.assert_called_once_with('some.state.sign')
-        jwt.get_unverified_header.reset_mock()
-        jwt.get_unverified_header.side_effect = None
+        jwt.decode.assert_called_once_with('some.state.sign', options=dict(verify_signature=False))
+        jwt.decode.reset_mock()
+        jwt.decode.side_effect = None
         request = rf.get('/', {'state': 'some.state.sign'})
         assert view.get_from_cli(request) is True
-        jwt.get_unverified_header.assert_called_once_with('some.state.sign')
+        jwt.decode.assert_called_once_with('some.state.sign', options=dict(verify_signature=False))
 
     @patch('oauth2_authcodeflow.views.jwt')
     def test_prepare_session_and_get_state(self, jwt, db, rf, sf, settings):
         view = CallbackView()
-        jwt.decode.side_effect = JWTError
+        jwt.PyJWTError = PyJWTError
+        jwt.decode.side_effect = PyJWTError
         settings.SECRET_KEY = 'django_key'
         request = rf.get('/')
         assert view.prepare_session_and_get_state(request, False) is None
@@ -897,7 +904,8 @@ class TestLogoutByOPView:
     @patch('oauth2_authcodeflow.views.BlacklistedToken')
     def test_get(self, BlacklistedToken, jwt, rf, sf):
         view = LogoutByOPView()
-        jwt.get_unverified_claims.return_value = {
+        jwt.PyJWTError = PyJWTError
+        jwt.decode.return_value = {
             'sid': 'session.id',
         }
         request = rf.get('/')

@@ -1,32 +1,32 @@
 include:
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/security@0.8
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-linter@0.8
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-tests@0.8
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/security@1
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-linter@1
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-tests@1
     inputs:
+      version: '3.15'
       versions:
-        - '3.10'
-        - '3.11'
-        - '3.12'
-        - '3.13'
         - '3.14'
+        - '3.13'
+        - '3.12'
+        - '3.11'
       future-enable: true
       future-system-packages: 'libffi-dev'
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/tag@0.8
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/tag@1
     inputs:
       needs:
         - security
         - secret
         - python-linter
         - python-tests
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-publish@0.8
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/python-publish@1
     inputs:
       publish-to: pypi
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/release@0.8
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/release@1
     inputs:
       needs:
         - python-publish
       links:
         - pypi
-  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/social@0.8
+  - component: $CI_SERVER_FQDN/snake_coders/tools/ci/social@1
     inputs:
       mastodon-enabled: true

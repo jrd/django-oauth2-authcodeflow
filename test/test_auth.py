@@ -1,4 +1,5 @@
 from base64 import b64encode
+from base64 import urlsafe_b64encode
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -6,15 +7,15 @@ from json import dumps
 from re import escape
 from unittest.mock import patch
 
+import jwt
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.utils import int_to_bytes
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.core.exceptions import SuspiciousOperation
 from freezegun import freeze_time
-from jose import jwt
-from jose.utils import long_to_base64
 
 from oauth2_authcodeflow import constants
 from oauth2_authcodeflow.auth import AuthenticationBackend
@@ -52,15 +53,27 @@ class TestAuthenticationMixin:
 
     def test_validate_and_decode_id_token_bad_data(self, frozen_datetime, settings):
         authentication = AuthenticationMixin()  # noqa
+        with pytest.raises(SuspiciousOperation, match=escape("Malformed JWT token")):
+            authentication.validate_and_decode_id_token(
+                id_token='this.is.bad',
+                nonce=None,
+                jwks={},
+            )
         with pytest.raises(SuspiciousOperation, match=escape("No alg value found in header")):
             authentication.validate_and_decode_id_token(
-                id_token=b64encode(dumps({'typ': 'jwt'}).encode('ascii')).decode('ascii') + '.data.sign',
+                id_token='.'.join(
+                    (
+                        b64encode(dumps({'typ': 'jwt'}).encode('ascii')).decode('ascii'),
+                        b64encode(b'{}').decode('ascii'),
+                        'sign',
+                    )
+                ),
                 nonce=None,
                 jwks={},
             )
         settings.OIDC_RP_SIGN_ALGOS_ALLOWED = ['RS256', 'RS512']
         settings.OIDC_RP_CLIENT_ID = 'a_client_id'
-        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret' * 3  # size >= 32
         rsa_private_pem = rsa.generate_private_key(65537, 2048).private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
@@ -73,13 +86,13 @@ class TestAuthenticationMixin:
             'nonce': 'bépo',
         }
         hs_token = jwt.encode(
-            claims=original_claims,
-            key=settings.OIDC_RP_CLIENT_SECRET,
+            original_claims,
+            settings.OIDC_RP_CLIENT_SECRET,
             algorithm='HS256',
         )
         rs_token = jwt.encode(
-            claims=original_claims,
-            key=rsa_private_pem,
+            original_claims,
+            rsa_private_pem,
             algorithm='RS256',
             headers={'kid': '123'},
         )
@@ -104,14 +117,22 @@ class TestAuthenticationMixin:
         settings.OIDC_RP_SIGN_ALGOS_ALLOWED = ['HS256', 'RS256', 'EC']
         with pytest.raises(NotImplementedError, match=escape("Algo EC cannot be handled by this authentication backend")):
             authentication.validate_and_decode_id_token(
-                id_token=b64encode(dumps({'alg': 'EC', 'typ': 'jwt'}).encode('ascii')).decode('ascii') + '.data.sign',
+                id_token='.'.join(
+                    (
+                        b64encode(dumps({'alg': 'EC', 'typ': 'jwt'}).encode('ascii')).decode('ascii'),
+                        b64encode(b'{}').decode('ascii'),
+                        'sign',
+                    )
+                ),
                 nonce=None,
                 jwks={},
             )
         settings.OIDC_RP_SIGN_ALGOS_ALLOWED = ['HS256', 'RS256']
         with pytest.raises(SuspiciousOperation, match=escape("JWT token verification failed")):
+            hs_token_parts = hs_token.split('.')
+            rs_token_parts = rs_token.split('.')
             authentication.validate_and_decode_id_token(
-                id_token='.'.join(hs_token.split('.')[:2]) + '.badsign',
+                id_token=hs_token_parts[0] + '.' + hs_token_parts[1] + '.' + rs_token_parts[-1],
                 nonce=None,
                 jwks={},
             )
@@ -124,17 +145,17 @@ class TestAuthenticationMixin:
 
     def test_validate_and_decode_id_token_get_claims_with_secret(self, frozen_datetime, settings):
         settings.OIDC_RP_CLIENT_ID = 'a_client_id'
-        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret'
+        settings.OIDC_RP_CLIENT_SECRET = 'a_client_secret' * 3  # size >= 32
         authentication = AuthenticationMixin()
         original_claims = {
             'aud': settings.OIDC_RP_CLIENT_ID,
             'email': 'my-email@example.com',
-            'exp': frozen_datetime() + timedelta(minutes=2),
+            'exp': int((frozen_datetime() + timedelta(minutes=2)).timestamp()),
             'nonce': 'bépo',
         }
         token = jwt.encode(
-            claims=original_claims,
-            key=settings.OIDC_RP_CLIENT_SECRET,
+            original_claims,
+            settings.OIDC_RP_CLIENT_SECRET,
             algorithm='HS256',
         )
         claims = authentication.validate_and_decode_id_token(
@@ -158,14 +179,18 @@ class TestAuthenticationMixin:
         original_claims = {
             'aud': settings.OIDC_RP_CLIENT_ID,
             'email': 'my-email@example.com',
-            'exp': frozen_datetime() + timedelta(minutes=2),
+            'exp': int((frozen_datetime() + timedelta(minutes=2)).timestamp()),
         }
         token = jwt.encode(
-            claims=original_claims,
-            key=rsa_private_pem,
+            original_claims,
+            rsa_private_pem,
             algorithm='RS256',
             headers={'kid': '123'},
         )
+
+        def int_to_base64(data: int) -> bytes:
+            return urlsafe_b64encode(int_to_bytes(data, None)).strip(b'=')
+
         claims = authentication.validate_and_decode_id_token(
             id_token=token,
             nonce=None,
@@ -176,8 +201,8 @@ class TestAuthenticationMixin:
                     'kty': 'RSA',
                     'alg': 'RS256',
                     'use': 'sig',
-                    'n': long_to_base64(rsa_public_numbers.n),
-                    'e': long_to_base64(rsa_public_numbers.e),
+                    'n': int_to_base64(rsa_public_numbers.n),
+                    'e': int_to_base64(rsa_public_numbers.e),
                 },
             },
         )
@@ -201,11 +226,11 @@ class TestAuthenticationMixin:
         original_claims = {
             'aud': settings.OIDC_RP_CLIENT_ID,
             'email': 'my-email@example.com',
-            'exp': frozen_datetime() + timedelta(minutes=2),
+            'exp': int((frozen_datetime() + timedelta(minutes=2)).timestamp()),
         }
         token = jwt.encode(
-            claims=original_claims,
-            key=rsa_private_pem,
+            original_claims,
+            rsa_private_pem,
             algorithm='RS256',
             headers={'kid': '123'},
         )

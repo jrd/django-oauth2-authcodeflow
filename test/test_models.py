@@ -2,9 +2,9 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 
+import jwt
 import pytest
 from freezegun import freeze_time
-from jose import jwt
 
 from oauth2_authcodeflow.models import BlacklistedToken
 
@@ -31,7 +31,7 @@ def test_blacklisted_token_model(frozen_datetime):
 
 def test_blacklist_with_exp(db, frozen_datetime, settings_email_as_username):
     exp_date = frozen_datetime() + timedelta(minutes=2)
-    token = jwt.encode({'email': 'my-email@example.com', 'exp': exp_date}, '')
+    token = jwt.encode({'email': 'my-email@example.com', 'exp': exp_date}, 'test' * 8)
     bl_token = BlacklistedToken.blacklist(token)
     assert bl_token
     assert bl_token.id
@@ -44,7 +44,7 @@ def test_blacklist_with_exp(db, frozen_datetime, settings_email_as_username):
 
 def test_blacklist_without_exp(db, frozen_datetime, settings_email_as_username):
     exp_date = frozen_datetime() + timedelta(seconds=300)
-    token = jwt.encode({'email': 'my-email@example.com'}, '')
+    token = jwt.encode({'email': 'my-email@example.com'}, 'test' * 8)
     bl_token = BlacklistedToken.blacklist(token)
     assert bl_token.id
     assert bl_token.username == 'my-email@example.com'
@@ -54,7 +54,7 @@ def test_blacklist_without_exp(db, frozen_datetime, settings_email_as_username):
 
 
 def test_is_blacklisted(db, frozen_datetime, settings_email_as_username):
-    token = jwt.encode({'email': 'my-email@example.com'}, '')
+    token = jwt.encode({'email': 'my-email@example.com'}, 'test' * 8)
     assert BlacklistedToken.is_blacklisted(token) is False
     BlacklistedToken.blacklist(token)
     assert BlacklistedToken.is_blacklisted(token) is True
@@ -62,8 +62,8 @@ def test_is_blacklisted(db, frozen_datetime, settings_email_as_username):
 
 def test_purge(db, frozen_datetime, settings_email_as_username):
     exp_date = frozen_datetime() - timedelta(minutes=5)
-    token1 = jwt.encode({'email': 'my-email@example.com'}, '')
-    token2 = jwt.encode({'email': 'my-email@example.com', 'exp': exp_date}, '')
+    token1 = jwt.encode({'email': 'my-email@example.com'}, 'test' * 8)
+    token2 = jwt.encode({'email': 'my-email@example.com', 'exp': exp_date}, 'test' * 8)
     assert BlacklistedToken.purge() == 0
     BlacklistedToken.blacklist(token1)
     assert BlacklistedToken.purge() == 0

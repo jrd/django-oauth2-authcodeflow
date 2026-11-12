@@ -1,0 +1,1 @@
+- Drop support for django 5.0 and 5.1
