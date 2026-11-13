@@ -123,6 +123,8 @@ class TestOauth2MiddlewareMixin:
         BlacklistedToken.is_blacklisted.return_value = True
         with pytest.raises(MiddlewareException, match=escape("token abc123 is blacklisted")):
             mixin.check_blacklisted(request)
+        session[constants.SESSION_ID_TOKEN] = None
+        mixin.check_blacklisted(request)
 
     def test_get_next_url(self, rf, sf, settings):
         settings.OIDC_REDIRECT_OK_FIELD_NAME = 'ok'
