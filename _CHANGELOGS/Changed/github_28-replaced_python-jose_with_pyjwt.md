@@ -1,1 +1,0 @@
-- replaced not-maintained `python-jose` with `pyjwt` (github #28)

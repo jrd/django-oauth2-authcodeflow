@@ -1,1 +1,0 @@
-- Ruff formatter applied

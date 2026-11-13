@@ -1,1 +1,0 @@
-- `CONTRIBUTING.md` file updated for correct url and to discard LLM contributions

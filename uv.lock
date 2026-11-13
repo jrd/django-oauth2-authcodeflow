@@ -575,7 +575,7 @@ wheels = [
 
 [[package]]
 name = "django-oauth2-authcodeflow"
-version = "1.4.1"
+version = "1.5.0"
 source = { editable = "." }
 default-groups = ["dev", "typing"]
 dependencies = [

@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.5.0
+
+### 🔧 Fixed
+- Fix TotalLogout view when session has no ID token (github #29)
+- Avoid the `session was deleted before the request completed` django session error when session expire (github #30)
+- urllib3 security update ⇒ 2.6.3
+
+### 📝 Changed
+- `CONTRIBUTING.md` file updated for correct url and to discard LLM contributions
+- replaced not-maintained `python-jose` with `pyjwt` (github #28)
+- Import UTC from datetime now
+- Package upgrades
+- Ruff formatter applied
+
+### ➕ Added
+- Support for django 6.1
+- Support for python 3.15
+
+### ➖ Removed
+- Drop support for django 4.2
+- Drop support for django 5.0 and 5.1
+- Drop support for python 3.10
+
 ## 1.4.1
 
 ### 📝 Changed
