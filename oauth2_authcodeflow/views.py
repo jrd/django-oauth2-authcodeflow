@@ -364,17 +364,22 @@ class TotalLogoutView(LogoutView, UrlParamsMixin):
         end_session_url = request.session.get(constants.SESSION_OP_END_SESSION_URL)
         if settings.OIDC_OP_TOTAL_LOGOUT and end_session_url:
             state = get_random_string(settings.OIDC_RANDOM_SIZE)
+            # https://openid.net/specs/openid-connect-rpinitiated-1_0.html#RPLogout
             logout_params = {
-                'id_token_hint': id_token or '',
                 'post_logout_redirect_uri': request.build_absolute_uri(reverse(constants.OIDC_URL_CALLBACK_NAME)),
                 'state': state,
             }
+            if id_token:
+                logout_params['id_token_hint'] = id_token
+            else:
+                logout_params['client_id'] = settings.OIDC_RP_CLIENT_ID
             self._clear_cache(request)
             request.session[constants.SESSION_NEXT_URL] = next_url
             request.session[constants.SESSION_FAIL_URL] = failure_url
-            # id token needs to go back into session because the OP may call the LogoutByOPView on logout
-            # and LogoutByOPView needs the id token
-            request.session[constants.SESSION_ID_TOKEN] = id_token
+            if id_token:
+                # if id token exists, it needs to go back into session:
+                # The OP may call the LogoutByOPView on logout and LogoutByOPView needs the id token
+                request.session[constants.SESSION_ID_TOKEN] = id_token
             request.session[constants.SESSION_LOGOUT_STATE] = state
             request.session.save()
             redirect_url = self.get_url_with_params(end_session_url, **logout_params)

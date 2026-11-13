@@ -1,0 +1,1 @@
+- Fix TotalLogout view when session has no ID token (github #29)

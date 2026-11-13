@@ -94,11 +94,9 @@ class Oauth2MiddlewareMixin:
 
     def check_blacklisted(self, request: HttpRequest) -> None:
         logger.debug(f"{self=}, {request.session.session_key=}, {request.session.keys()=}")
-        if constants.SESSION_ID_TOKEN in request.session:
-            id_token = request.session[constants.SESSION_ID_TOKEN]
-            if BlacklistedToken.is_blacklisted(id_token):
-                logger.debug(f"token {id_token} is blacklisted")
-                raise MiddlewareException(f"token {id_token} is blacklisted")
+        if (id_token := request.session.get(constants.SESSION_ID_TOKEN)) and BlacklistedToken.is_blacklisted(id_token):
+            logger.debug(f"token {id_token} is blacklisted")
+            raise MiddlewareException(f"token {id_token} is blacklisted")
 
     def get_param_url(self, request: HttpRequest, get_field: str, session_field: str) -> str:
         url = request.GET.get(get_field) if request.method == 'GET' else None
