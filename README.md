@@ -105,10 +105,14 @@ At least three options are possible.
   # settings.py
   from django.urls import reverse_lazy
   from django.utils.text import format_lazy
+
   LOGIN_URL = format_lazy('{url}?fail=/', url=reverse_lazy(OIDC_URL_AUTHENTICATION_NAME))
   # urls.py
   from django.contrib.auth.decorators import login_required
-  path('restricted_url/', login_required(your_view)),
+
+  urlpatterns = [
+      path('restricted_url/', login_required(your_view)),
+  ]
   ```
 2. A slightly different version, by directly and only using the `login_required` from `oauth2_authcodeflow.utils`.
 3. Use the `LoginRequiredMiddleware` with `OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS` configuration.

@@ -37,10 +37,12 @@ def sf():
     Session factory
     takes a request as argument and create a session (not saved) on it
     """
+
     def session_factory(request):
         middleware = SessionMiddleware(lambda x: None)
         middleware.process_request(request)
         return request.session
+
     yield session_factory
 
 
@@ -49,8 +51,7 @@ class TestOauth2MiddlewareMixin:
         def get_response(request: HttpRequest) -> HttpResponse:
             return HttpResponse()
 
-        def check(request: HttpResponse) -> None:
-            ...
+        def check(request: HttpResponse) -> None: ...
 
         settings.OIDC_MIDDLEWARE_NO_AUTH_URL_PATTERNS = ['/public', '/docs']
         mixin = Oauth2MiddlewareMixin(get_response, 'test', check)
@@ -372,12 +373,16 @@ class TestRefreshAccessTokenMiddleware:
         assert session[constants.SESSION_ACCESS_TOKEN] == '456789'
         assert session[constants.SESSION_ACCESS_EXPIRES_AT] == expected_expires_at
         assert session[constants.SESSION_REFRESH_TOKEN] == '13579'
-        request_post.assert_called_once_with('token_url', data=dict(
-            grant_type='refresh_token',
-            client_id=settings.OIDC_RP_CLIENT_ID,
-            client_secret=settings.OIDC_RP_CLIENT_SECRET,
-            refresh_token='13579',
-        ), headers=None)
+        request_post.assert_called_once_with(
+            'token_url',
+            data=dict(
+                grant_type='refresh_token',
+                client_id=settings.OIDC_RP_CLIENT_ID,
+                client_secret=settings.OIDC_RP_CLIENT_SECRET,
+                refresh_token='13579',
+            ),
+            headers=None,
+        )
         BlacklistedToken.blacklist.assert_not_called()
         # case expired, different id token
         # without client secret
@@ -396,11 +401,15 @@ class TestRefreshAccessTokenMiddleware:
         assert session[constants.SESSION_ACCESS_TOKEN] == '456789'
         assert session[constants.SESSION_ACCESS_EXPIRES_AT] == expected_expires_at
         assert session[constants.SESSION_REFRESH_TOKEN] == '24680'
-        request_post.assert_called_once_with('token_url', data=dict(
-            grant_type='refresh_token',
-            client_id=settings.OIDC_RP_CLIENT_ID,
-            refresh_token='13579',
-        ), headers=None)
+        request_post.assert_called_once_with(
+            'token_url',
+            data=dict(
+                grant_type='refresh_token',
+                client_id=settings.OIDC_RP_CLIENT_ID,
+                refresh_token='13579',
+            ),
+            headers=None,
+        )
         BlacklistedToken.blacklist.assert_called_once_with('abc123')
         BlacklistedToken.blacklist.reset_mock()
         # case expired
@@ -420,11 +429,15 @@ class TestRefreshAccessTokenMiddleware:
         assert session[constants.SESSION_ACCESS_TOKEN] == '456789'
         assert session[constants.SESSION_ACCESS_EXPIRES_AT] == expected_expires_at
         assert session[constants.SESSION_REFRESH_TOKEN] == '24680'
-        request_post.assert_called_once_with('token_url', data=dict(
-            grant_type='refresh_token',
-            client_id=settings.OIDC_RP_CLIENT_ID,
-            refresh_token='13579',
-        ), headers=dict(origin='http://testserver/oidc/callback'))
+        request_post.assert_called_once_with(
+            'token_url',
+            data=dict(
+                grant_type='refresh_token',
+                client_id=settings.OIDC_RP_CLIENT_ID,
+                refresh_token='13579',
+            ),
+            headers=dict(origin='http://testserver/oidc/callback'),
+        )
         BlacklistedToken.blacklist.assert_called_once_with('abc123')
         settings.OIDC_RP_AZURE_SPA = False
         # case refresh is denied by OP
@@ -441,12 +454,16 @@ class TestRefreshAccessTokenMiddleware:
         session[constants.SESSION_OP_TOKEN_URL] = 'token_url'
         with pytest.raises(MiddlewareException, match=escape("some error")):
             middleware.check_access_token(request)
-        request_post.assert_called_once_with('token_url', data=dict(
-            grant_type='refresh_token',
-            client_id=settings.OIDC_RP_CLIENT_ID,
-            client_secret='',
-            refresh_token='13579',
-        ), headers=None)
+        request_post.assert_called_once_with(
+            'token_url',
+            data=dict(
+                grant_type='refresh_token',
+                client_id=settings.OIDC_RP_CLIENT_ID,
+                client_secret='',
+                refresh_token='13579',
+            ),
+            headers=None,
+        )
 
 
 class TestRefreshSessionMiddleware:
@@ -458,16 +475,14 @@ class TestRefreshSessionMiddleware:
         assert middleware.check_function == middleware.check_session
         settings.SESSION_COOKIE_AGE = 1800
         settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS = 3600
-        with pytest.raises(ImproperlyConfigured, match=escape(
-            "OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS should be less than SESSION_COOKIE_AGE"
-            " and more than 10 seconds"
-        )):
+        with pytest.raises(
+            ImproperlyConfigured, match=escape("OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS should be less than SESSION_COOKIE_AGE and more than 10 seconds")
+        ):
             RefreshSessionMiddleware(get_response)
         settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS = 5
-        with pytest.raises(ImproperlyConfigured, match=escape(
-            "OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS should be less than SESSION_COOKIE_AGE"
-            " and more than 10 seconds"
-        )):
+        with pytest.raises(
+            ImproperlyConfigured, match=escape("OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS should be less than SESSION_COOKIE_AGE and more than 10 seconds")
+        ):
             RefreshSessionMiddleware(get_response)
         settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS = 30
         RefreshSessionMiddleware(get_response)

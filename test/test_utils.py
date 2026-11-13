@@ -11,79 +11,101 @@ from oauth2_authcodeflow.utils import OIDCUrlsMixin
 from oauth2_authcodeflow.utils import login_required
 
 
-@pytest.mark.parametrize('config', [
-    dict(
-        OIDC_OP_DISCOVERY_DOCUMENT_URL=None,
-        OIDC_OP_AUTHORIZATION_URL=None,
-        OIDC_OP_TOKEN_URL=None,
-        OIDC_OP_USERINFO_URL=None,
-        OIDC_OP_JWKS_URL=None,
-        OIDC_OP_END_SESSION_URL=None,
-    ),
-    dict(
-        OIDC_OP_DISCOVERY_DOCUMENT_URL='discovery_url1',
-        OIDC_OP_AUTHORIZATION_URL=None,
-        OIDC_OP_TOKEN_URL=None,
-        OIDC_OP_USERINFO_URL=None,
-        OIDC_OP_JWKS_URL=None,
-        OIDC_OP_END_SESSION_URL=None,
-    ),
-    dict(
-        OIDC_OP_DISCOVERY_DOCUMENT_URL='discovery_url2',
-        OIDC_OP_AUTHORIZATION_URL=None,
-        OIDC_OP_TOKEN_URL=None,
-        OIDC_OP_USERINFO_URL=None,
-        OIDC_OP_JWKS_URL=None,
-        OIDC_OP_END_SESSION_URL=None,
-        OIDC_OP_FETCH_USER_INFO=False,
-    ),
-    dict(
-        OIDC_OP_DISCOVERY_DOCUMENT_URL=None,
-        OIDC_OP_AUTHORIZATION_URL='auth_url',
-        OIDC_OP_TOKEN_URL='token_url',
-        OIDC_OP_USERINFO_URL='user_url',
-        OIDC_OP_JWKS_URL='jwks_url',
-        OIDC_OP_END_SESSION_URL='end_session_url',
-    ),
-], ids=['empty_config', 'with_discovery1', 'with_discovery2', 'without_discovery'])
-@pytest.mark.parametrize('session', [
-    pytest.param({}, id='empty_session'),
-    pytest.param({
-        constants.SESSION_OP_AUTHORIZATION_URL: 'auth_url',
-        constants.SESSION_OP_TOKEN_URL: 'token_url',
-        constants.SESSION_OP_USERINFO_URL: 'user_url',
-        constants.SESSION_OP_JWKS_URL: 'jwks_url',
-        constants.SESSION_OP_END_SESSION_URL: 'end_session_url',
-        constants.SESSION_OP_CLAIMS_PARAMETER_SUPPORTED: True,
-        constants.SESSION_OP_JWKS: {'125': {'kid': '125', 'kty': 'RSA', 'use': 'sig', 'value': 3}},
-    }, id='full_session'),
-])
+@pytest.mark.parametrize(
+    'config',
+    [
+        dict(
+            OIDC_OP_DISCOVERY_DOCUMENT_URL=None,
+            OIDC_OP_AUTHORIZATION_URL=None,
+            OIDC_OP_TOKEN_URL=None,
+            OIDC_OP_USERINFO_URL=None,
+            OIDC_OP_JWKS_URL=None,
+            OIDC_OP_END_SESSION_URL=None,
+        ),
+        dict(
+            OIDC_OP_DISCOVERY_DOCUMENT_URL='discovery_url1',
+            OIDC_OP_AUTHORIZATION_URL=None,
+            OIDC_OP_TOKEN_URL=None,
+            OIDC_OP_USERINFO_URL=None,
+            OIDC_OP_JWKS_URL=None,
+            OIDC_OP_END_SESSION_URL=None,
+        ),
+        dict(
+            OIDC_OP_DISCOVERY_DOCUMENT_URL='discovery_url2',
+            OIDC_OP_AUTHORIZATION_URL=None,
+            OIDC_OP_TOKEN_URL=None,
+            OIDC_OP_USERINFO_URL=None,
+            OIDC_OP_JWKS_URL=None,
+            OIDC_OP_END_SESSION_URL=None,
+            OIDC_OP_FETCH_USER_INFO=False,
+        ),
+        dict(
+            OIDC_OP_DISCOVERY_DOCUMENT_URL=None,
+            OIDC_OP_AUTHORIZATION_URL='auth_url',
+            OIDC_OP_TOKEN_URL='token_url',
+            OIDC_OP_USERINFO_URL='user_url',
+            OIDC_OP_JWKS_URL='jwks_url',
+            OIDC_OP_END_SESSION_URL='end_session_url',
+        ),
+    ],
+    ids=['empty_config', 'with_discovery1', 'with_discovery2', 'without_discovery'],
+)
+@pytest.mark.parametrize(
+    'session',
+    [
+        pytest.param({}, id='empty_session'),
+        pytest.param(
+            {
+                constants.SESSION_OP_AUTHORIZATION_URL: 'auth_url',
+                constants.SESSION_OP_TOKEN_URL: 'token_url',
+                constants.SESSION_OP_USERINFO_URL: 'user_url',
+                constants.SESSION_OP_JWKS_URL: 'jwks_url',
+                constants.SESSION_OP_END_SESSION_URL: 'end_session_url',
+                constants.SESSION_OP_CLAIMS_PARAMETER_SUPPORTED: True,
+                constants.SESSION_OP_JWKS: {'125': {'kid': '125', 'kty': 'RSA', 'use': 'sig', 'value': 3}},
+            },
+            id='full_session',
+        ),
+    ],
+)
 @patch('oauth2_authcodeflow.utils.settings')
 @patch('oauth2_authcodeflow.utils.request_get')
 def test_get_oidc_urls(request_get, settings, config, session):
     for key, value in config.items():
         setattr(settings, key, value)
-    discovery_response1 = MagicMock(**{'json.return_value': {
-        'authorization_endpoint': 'auth_url',
-        'token_endpoint': 'token_url',
-        'userinfo_endpoint': 'user_url',
-        'jwks_uri': 'jwks_url',
-        'end_session_endpoint': 'end_session_url',
-        constants.OIDC_CLAIMS_PARAMETER_SUPPORTED: True,
-    }})
-    discovery_response2 = MagicMock(**{'json.return_value': {
-        'authorization_endpoint': 'auth_url',
-        'token_endpoint': 'token_url',
-        'userinfo_endpoint': 'user_url',
-    }})
-    jwks_response = MagicMock(**{'json.return_value': {
-        'keys': [
-            {'kid': '123', 'kty': 'TEST', 'use': 'test', 'value': 1},
-            {'kid': '124', 'kty': 'RSA', 'use': 'test', 'value': 2},
-            {'kid': '125', 'kty': 'RSA', 'use': 'sig', 'value': 3},
-            {'kid': '126', 'kty': 'TEST', 'use': 'sig', 'value': 4},
-        ],
-    }})
+    discovery_response1 = MagicMock(
+        **{
+            'json.return_value': {
+                'authorization_endpoint': 'auth_url',
+                'token_endpoint': 'token_url',
+                'userinfo_endpoint': 'user_url',
+                'jwks_uri': 'jwks_url',
+                'end_session_endpoint': 'end_session_url',
+                constants.OIDC_CLAIMS_PARAMETER_SUPPORTED: True,
+            }
+        }
+    )
+    discovery_response2 = MagicMock(
+        **{
+            'json.return_value': {
+                'authorization_endpoint': 'auth_url',
+                'token_endpoint': 'token_url',
+                'userinfo_endpoint': 'user_url',
+            }
+        }
+    )
+    jwks_response = MagicMock(
+        **{
+            'json.return_value': {
+                'keys': [
+                    {'kid': '123', 'kty': 'TEST', 'use': 'test', 'value': 1},
+                    {'kid': '124', 'kty': 'RSA', 'use': 'test', 'value': 2},
+                    {'kid': '125', 'kty': 'RSA', 'use': 'sig', 'value': 3},
+                    {'kid': '126', 'kty': 'TEST', 'use': 'sig', 'value': 4},
+                ],
+            }
+        }
+    )
     request_get.side_effect = lambda url: {'discovery_url1': discovery_response1, 'discovery_url2': discovery_response2, 'jwks_url': jwks_response}.get(url)
     if not session and not settings.OIDC_OP_DISCOVERY_DOCUMENT_URL and not settings.OIDC_OP_AUTHORIZATION_URL:
         ctx = pytest.raises(ImproperlyConfigured, match="OIDC_OP_AUTHORIZATION_URL is undefined")
@@ -101,15 +123,19 @@ def test_get_oidc_urls(request_get, settings, config, session):
             'oidc_op_jwks': {'125': {'kid': '125', 'kty': 'RSA', 'use': 'sig', 'value': 3}},
         }
         if session:
-            expected_session.update({
-                'oidc_op_claims_parameter_supported': session.get(constants.SESSION_OP_CLAIMS_PARAMETER_SUPPORTED, False),
-            })
+            expected_session.update(
+                {
+                    'oidc_op_claims_parameter_supported': session.get(constants.SESSION_OP_CLAIMS_PARAMETER_SUPPORTED, False),
+                }
+            )
         elif not session and settings.OIDC_OP_DISCOVERY_DOCUMENT_URL == 'discovery_url2':
-            expected_session.update({
-                'oidc_op_jwks_url': None,
-                'oidc_op_end_session_url': None,
-                'oidc_op_jwks': {},
-            })
+            expected_session.update(
+                {
+                    'oidc_op_jwks_url': None,
+                    'oidc_op_end_session_url': None,
+                    'oidc_op_jwks': {},
+                }
+            )
         assert new_session == expected_session
         if not session:
             if settings.OIDC_OP_DISCOVERY_DOCUMENT_URL == 'discovery_url1':

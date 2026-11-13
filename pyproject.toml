@@ -90,12 +90,14 @@ verbosity = -1
 include = [
   ".poe/project.toml",
   ".poe/linters.toml",
+  ".poe/formatters.toml",
   ".poe/tests.toml",
 ]
 
 [tool.ruff]
 line-length = 160
-target-version = "py310"
+target-version = "py311"
+extend-exclude = ["oauth2_authcodeflow/migrations"]
 
 [tool.ruff.lint]
 preview = true

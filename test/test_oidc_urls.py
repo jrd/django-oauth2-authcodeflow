@@ -30,7 +30,4 @@ def test_oidc_urls_output(settings):
     opts = dict(stdout=out, stderr=err)
     settings.ALLOWED_HOSTS = ['127.0.0.1', 'toto.example.com']
     call_command('oidc_urls', 'toto.example.com', **opts)
-    assert out.getvalue() == (
-        "redirect_url: http://toto.example.com/oidc/callback\n"
-        "logout_url: http://toto.example.com/oidc/logout_by_op\n"
-    )
+    assert out.getvalue() == ("redirect_url: http://toto.example.com/oidc/callback\nlogout_url: http://toto.example.com/oidc/logout_by_op\n")

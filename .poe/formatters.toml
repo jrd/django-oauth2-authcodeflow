@@ -1,0 +1,4 @@
+[tasks.format]
+help = "Format python code with ruff"
+cmd = "ruff format ${FILE_PATHS}"
+args = [{ name = "FILE_PATHS", positional = true, multiple = true, default = "." }]

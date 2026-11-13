@@ -5,6 +5,7 @@ from oauth2_authcodeflow.urls import urlpatterns
 def test_urlpatterns():
     def find_url_pattern(name):
         return next(iter(up for up in urlpatterns if up.name == name), None)
+
     authenticate_url = find_url_pattern(constants.OIDC_URL_AUTHENTICATION_NAME)
     callback_url = find_url_pattern(constants.OIDC_URL_CALLBACK_NAME)
     logout_url = find_url_pattern(constants.OIDC_URL_LOGOUT_NAME)
