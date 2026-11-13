@@ -167,10 +167,17 @@ class TestOauth2MiddlewareMixin:
     def test_destroy_session(self, rf, sf, db):
         request = rf.get('/some/url')
         session = sf(request)
+        assert session.is_empty()
         mixin = Oauth2MiddlewareMixin(MagicMock(), 'test', MagicMock())
         mixin.destroy_session(request)
+        assert session.is_empty()
+        assert session.model.objects.count() == 0
         session.save()
+        assert not session.is_empty()
+        assert session.model.objects.count() == 1
         mixin.destroy_session(request)
+        assert session.is_empty()
+        assert session.model.objects.count() == 0
 
     def test_is_api_request(self, rf, sf, settings):
         settings.OIDC_MIDDLEWARE_API_URL_PATTERNS = ['/rest', '/api']

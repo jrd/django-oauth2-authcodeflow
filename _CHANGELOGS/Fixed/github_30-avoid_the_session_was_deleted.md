@@ -1,0 +1,1 @@
+- Avoid the `session was deleted before the request completed` django session error when session expire (github #30)

@@ -116,7 +116,7 @@ class Oauth2MiddlewareMixin:
 
     def destroy_session(self, request: HttpRequest) -> None:
         try:
-            Session.objects.get(session_key=request.session.session_key).delete()
+            request.session.flush()
         except Session.DoesNotExist:
             pass
 
