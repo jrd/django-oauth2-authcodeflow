@@ -1,6 +1,6 @@
 from base64 import urlsafe_b64decode
+from datetime import UTC
 from datetime import datetime
-from datetime import timezone
 from inspect import signature
 from logging import getLogger
 from re import search
@@ -223,7 +223,7 @@ class AuthenticationBackend(ModelBackend, AuthenticationMixin):
             refresh_token = result.get('refresh_token') if 'offline_access' in settings.OIDC_RP_SCOPES else None
             id_claims = self.validate_and_decode_id_token(id_token, nonce, request.session.get(constants.SESSION_OP_JWKS, {}))
             self.validate_claims(id_claims)
-            now_ts = int(datetime.now(tz=timezone.utc).timestamp())
+            now_ts = int(datetime.now(tz=UTC).timestamp())
             session_expires_at = now_ts + settings.OIDC_MIDDLEWARE_SESSION_TIMEOUT_SECONDS
             if access_expires_in:
                 access_expires_at = now_ts + access_expires_in

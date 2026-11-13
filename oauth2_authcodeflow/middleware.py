@@ -1,6 +1,6 @@
 from collections.abc import Callable
+from datetime import UTC
 from datetime import datetime
-from datetime import timezone
 from logging import getLogger
 from re import search
 from urllib.parse import urlencode
@@ -223,13 +223,13 @@ class RefreshAccessTokenMiddleware(Oauth2MiddlewareMixin):
         if constants.SESSION_REFRESH_TOKEN not in request.session:
             return
         utc_expiration = request.session[constants.SESSION_ACCESS_EXPIRES_AT]
-        utc_now = int(datetime.now(tz=timezone.utc).timestamp())
+        utc_now = int(datetime.now(tz=UTC).timestamp())
         if utc_expiration > utc_now:
             # The id_token is still valid, so we don't have to do anything.
             logger.debug(
                 'access token is still valid (%s > %s)',
-                datetime.fromtimestamp(utc_expiration, tz=timezone.utc).strftime('%d/%m/%Y, %H:%M:%S'),
-                datetime.fromtimestamp(utc_now, tz=timezone.utc).strftime('%d/%m/%Y, %H:%M:%S'),
+                datetime.fromtimestamp(utc_expiration, tz=UTC).strftime('%d/%m/%Y, %H:%M:%S'),
+                datetime.fromtimestamp(utc_now, tz=UTC).strftime('%d/%m/%Y, %H:%M:%S'),
             )
             return
         logger.debug('access token has expired')
@@ -294,13 +294,13 @@ class RefreshSessionMiddleware(Oauth2MiddlewareMixin):
             msg = f"No {constants.SESSION_EXPIRES_AT} parameter in the backend session"
             logger.debug(msg)
             raise MiddlewareException(msg)
-        utc_now = datetime.now(tz=timezone.utc).timestamp()
+        utc_now = datetime.now(tz=UTC).timestamp()
         if utc_expiration > utc_now:
             # The session is still valid, so we don't have to do anything.
             logger.debug(
                 'session is still valid (%s > %s)',
-                datetime.fromtimestamp(utc_expiration, tz=timezone.utc).strftime('%d/%m/%Y, %H:%M:%S'),
-                datetime.fromtimestamp(utc_now, tz=timezone.utc).strftime('%d/%m/%Y, %H:%M:%S'),
+                datetime.fromtimestamp(utc_expiration, tz=UTC).strftime('%d/%m/%Y, %H:%M:%S'),
+                datetime.fromtimestamp(utc_now, tz=UTC).strftime('%d/%m/%Y, %H:%M:%S'),
             )
             return
         # The session has expired, an authentication is now required
