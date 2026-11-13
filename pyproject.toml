@@ -44,7 +44,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
   "Typing :: Typed",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
   "django>=5.0",
   "pyjwt[crypto]>=2.15",

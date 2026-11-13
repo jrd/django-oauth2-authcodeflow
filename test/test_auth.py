@@ -1,8 +1,8 @@
 from base64 import b64encode
 from base64 import urlsafe_b64encode
+from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
-from datetime import timezone
 from json import dumps
 from re import escape
 from unittest.mock import patch
@@ -26,7 +26,7 @@ from oauth2_authcodeflow.utils import OIDCUrlsMixin
 
 @pytest.fixture
 def frozen_datetime():
-    fake_utcnow = datetime(2023, 1, 1, tzinfo=timezone.utc)
+    fake_utcnow = datetime(2023, 1, 1, tzinfo=UTC)
     with freeze_time(fake_utcnow.replace(tzinfo=None)) as frozen_datetime:
         frozen_datetime.fake_utcnow = fake_utcnow
         yield frozen_datetime

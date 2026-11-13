@@ -1,8 +1,8 @@
+from datetime import UTC
 from datetime import datetime
 from datetime import timedelta
-from datetime import timezone
 from logging import getLogger
-from typing import Optional
+from typing import Self
 from typing import cast
 
 import jwt
@@ -33,12 +33,12 @@ class BlacklistedToken(models.Model):
         ]
 
     @classmethod
-    def blacklist(cls, token: str) -> Optional['BlacklistedToken']:
+    def blacklist(cls, token: str) -> Self | None:
         claims = jwt.decode(token, options=dict(verify_signature=False))
         username = settings.OIDC_DJANGO_USERNAME_FUNC(claims)
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         if 'exp' in claims:
-            expires_at = datetime.fromtimestamp(claims['exp'], tz=timezone.utc)
+            expires_at = datetime.fromtimestamp(claims['exp'], tz=UTC)
         else:
             expires_at = now + timedelta(seconds=settings.OIDC_BLACKLIST_TOKEN_TIMEOUT_SECONDS)
         try:
@@ -55,7 +55,7 @@ class BlacklistedToken(models.Model):
 
     @classmethod
     def purge(cls) -> int:
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         nb, _ = cls.objects.filter(expires_at__lte=now).delete()
         return nb
 
